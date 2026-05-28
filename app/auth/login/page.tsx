@@ -1,68 +1,93 @@
 "use client";
-
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
-
+import { useRouter, useSearchParams } from "next/navigation";
+import { Lock, Mail, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+ 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail]               = useState("");
+  const [password, setPassword]         = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
+  const [isLoading, setIsLoading]       = useState(false);
+  const [error, setError]               = useState("");
+ 
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+ 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // Simulasi logika Login & Redirect berdasarkan Role
-    // Nantinya bagian ini akan memanggil API Backend kamu
-    setTimeout(() => {
-      console.log("Logging in with:", { username, password });
-      
-      // Contoh simulasi redirect:
-      // if (role === 'siswa') router.push('/dashboard/siswa');
-      
+    setError("");
+ 
+    try {
+      const res = await fetch("/api/auth/login", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email, password }),
+      });
+ 
+      const data = await res.json();
+ 
+      if (!res.ok || !data.success) {
+        setError(data.message ?? "Login gagal. Periksa email dan password.");
+        return;
+      }
+ 
+      // Redirect: gunakan callbackUrl jika ada, atau dashboard dari API
+      const callbackUrl = searchParams.get("callbackUrl");
+      router.push(callbackUrl ?? data.redirectTo ?? "/dashboard");
+      router.refresh(); // supaya middleware baca cookie baru
+ 
+    } catch {
+      setError("Tidak dapat terhubung ke server. Coba lagi.");
+    } finally {
       setIsLoading(false);
-      alert("Login berhasil! (Simulasi)");
-    }, 1500);
+    }
   };
-
+ 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
-        
-        {/* Header / Logo */}
+ 
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
             <Lock className="text-white w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold text-slate-800">Selamat Datang</h1>
           <p className="text-slate-500 mt-2 text-sm">
-            Silakan masukkan username dan kata sandi Anda untuk mengakses platform pembelajaran.
+            Silakan masukkan email dan kata sandi Anda untuk mengakses platform pembelajaran.
           </p>
         </div>
-
+ 
+        {/* Error banner */}
+        {error && (
+          <div className="mb-5 flex items-center space-x-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+            <AlertCircle size={16} className="flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+ 
         <form onSubmit={handleLogin} className="space-y-5">
-          {/* Input Username */}
+ 
+          {/* Email */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700 ml-1">Username</label>
+            <label className="text-sm font-semibold text-slate-700 ml-1">Email</label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                <User size={18} />
+                <Mail size={18} />
               </div>
               <input
-                type="text"
+                type="email"
                 required
                 className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                placeholder="Masukkan username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="contoh@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
-
-          {/* Input Password */}
+ 
+          {/* Password */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700 ml-1">Kata Sandi</label>
             <div className="relative group">
@@ -86,35 +111,24 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
-
-          {/* Remember Me */}
-          <div className="flex items-center justify-between px-1">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" 
-              />
-              <span className="text-sm text-slate-600">Ingat Saya</span>
-            </label>
-          </div>
-
-          {/* Submit Button */}
+ 
+          {/* Submit */}
           <button
             type="submit"
             disabled={isLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isLoading ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              "Masuk ke Dashboard"
-            )}
+            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Masuk ke Dashboard"}
           </button>
         </form>
-
-        {/* Footer info */}
-        <div className="mt-8 text-center text-xs text-slate-400 leading-relaxed">
-          Sistem Informasi Pembelajaran Adaptif <br /> 
+ 
+        {/* Dev hint — remove in production */}
+        <div className="mt-6 p-3 bg-slate-50 rounded-xl text-xs text-slate-400 text-center">
+          Test: <span className="font-mono">guru@test.com</span> / <span className="font-mono">password123</span>
+        </div>
+ 
+        <div className="mt-4 text-center text-xs text-slate-400 leading-relaxed">
+          Sistem Informasi Pembelajaran Adaptif <br />
           &copy; 2026 - Lingkungan Sekolah Dasar
         </div>
       </div>
