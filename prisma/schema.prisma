@@ -26,6 +26,7 @@ model User {
   teacher          Teacher?
   creator          User?          @relation("UserCreator", fields: [createdBy], references: [id], onUpdate: NoAction, map: "fk_users_creator")
   createdUsers     User[]         @relation("UserCreator")
+  auditLogs        AuditLog[]
 
   @@index([email], map: "idx_users_email")
   @@index([role], map: "idx_users_role")
@@ -302,4 +303,21 @@ model Notification {
 
   @@index([userId, isRead], map: "idx_notifications_user")
   @@map("notifications")
+}
+
+model AuditLog {
+  id        BigInt    @id @default(autoincrement())
+  userId    String?   @map("user_id") @db.Uuid
+  event     String    @db.VarChar(50)
+  ipAddress String?   @map("ip_address")
+  userAgent String?   @map("user_agent")
+  detail    Json?
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([event])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

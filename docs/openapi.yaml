@@ -1,0 +1,268 @@
+```yaml
+openapi: 3.0.0
+
+info:
+  title: RSI Learning Platform API
+  version: 1.0.0
+  description: >
+    REST API documentation for RSI Learning Platform.
+    Covers materials, quiz system, analytics, and audit logging.
+
+servers:
+  - url: http://localhost:3000
+
+tags:
+  - name: Materials
+  - name: Quiz
+  - name: Analytics
+  - name: Audit Log
+
+paths:
+
+  /api/materials:
+    get:
+      tags:
+        - Materials
+      summary: Get all materials
+      description: Retrieve all learning materials based on user role.
+      responses:
+        "200":
+          description: Materials retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    title:
+                      type: string
+                    subject:
+                      type: string
+                    classLevel:
+                      type: string
+
+        "401":
+          description: Unauthorized
+
+    post:
+      tags:
+        - Materials
+      summary: Create new material
+      description: Teacher creates a new learning material.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                subject:
+                  type: string
+                embedUrl:
+                  type: string
+
+      responses:
+        "201":
+          description: Material created successfully
+
+        "400":
+          description: Invalid input
+
+        "401":
+          description: Unauthorized
+
+  /api/materials/{id}:
+    get:
+      tags:
+        - Materials
+      summary: Get material detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Material detail retrieved
+
+        "404":
+          description: Material not found
+
+    put:
+      tags:
+        - Materials
+      summary: Update material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                embedUrl:
+                  type: string
+
+      responses:
+        "200":
+          description: Material updated successfully
+
+        "404":
+          description: Material not found
+
+    delete:
+      tags:
+        - Materials
+      summary: Delete material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Material deleted successfully
+
+        "404":
+          description: Material not found
+
+  /api/quiz/start:
+    post:
+      tags:
+        - Quiz
+      summary: Start adaptive quiz
+      description: Start quiz session and return first question.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - materialId
+              properties:
+                materialId:
+                  type: string
+
+      responses:
+        "200":
+          description: Quiz started successfully
+
+        "401":
+          description: Unauthorized
+
+  /api/quiz/answers:
+    post:
+      tags:
+        - Quiz
+      summary: Submit quiz answer
+      description: Submit student answer and retrieve next adaptive question.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - questionId
+                - answer
+              properties:
+                sessionId:
+                  type: string
+                questionId:
+                  type: string
+                answer:
+                  type: string
+
+      responses:
+        "200":
+          description: Answer processed successfully
+
+        "400":
+          description: Invalid answer payload
+
+  /api/quiz/finish:
+    post:
+      tags:
+        - Quiz
+      summary: Finish quiz session
+      description: Save final score and progress.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+              properties:
+                sessionId:
+                  type: string
+
+      responses:
+        "200":
+          description: Quiz finished successfully
+
+  /api/analytics/student/{id}:
+    get:
+      tags:
+        - Analytics
+      summary: Get student analytics
+      description: Retrieve learning analytics and performance data.
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Analytics retrieved successfully
+
+        "404":
+          description: Student not found
+
+  /api/audit-log:
+    get:
+      tags:
+        - Audit Log
+      summary: Get audit logs
+      description: Retrieve system activity logs for monitoring.
+
+      responses:
+        "200":
+          description: Audit logs retrieved successfully
+
+        "401":
+          description: Unauthorized
+```

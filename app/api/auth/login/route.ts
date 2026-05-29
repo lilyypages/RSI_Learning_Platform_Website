@@ -68,6 +68,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 5. Simpan audit log login sukses
+    await createAuditLog({
+      userId: user.id,
+      event: "LOGIN_SUCCESS",
+      ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
+      userAgent: req.headers.get("user-agent") ?? "unknown",
+    });
+
     // 5. Sign JWT
     const token = await signToken({
       userId: user.id,
