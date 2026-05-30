@@ -2,7 +2,8 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, BookOpen, FileBarChart, LogOut, Bell, LayoutDashboard } from "lucide-react";
+import { Users, BookOpen, FileBarChart, LogOut, LayoutDashboard } from "lucide-react";
+import NotificationDropdown from "@/components/shared/NotificationDropdown";
 
 export default function GuruLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -80,12 +81,7 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
             </span>
           </div>
           <div className="flex items-center space-x-6">
-            <div className="relative">
-              <Bell size={22} className="text-slate-400 cursor-pointer hover:text-indigo-600 transition-colors" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full text-[8px] flex items-center justify-center text-white font-bold">
-                2
-              </span>
-            </div>
+            <NotificationDropdown />
             <div className="h-8 w-px bg-slate-100" />
             <div className="text-right">
               <p className="text-sm font-black text-slate-800 leading-none">Ibu Guru Pertiwi</p>
