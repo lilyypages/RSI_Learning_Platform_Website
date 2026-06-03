@@ -15,17 +15,26 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulasi logika Login & Redirect berdasarkan Role
-    // Nantinya bagian ini akan memanggil API Backend kamu
-    setTimeout(() => {
-      console.log("Logging in with:", { username, password });
-      
-      // Contoh simulasi redirect:
-      // if (role === 'siswa') router.push('/dashboard/siswa');
-      
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        alert(data.message || "Login gagal");
+        setIsLoading(false);
+        return;
+      }
+
+      router.push(data.redirectTo);
+    } catch {
+      alert("Terjadi kesalahan. Silakan coba lagi.");
       setIsLoading(false);
-      alert("Login berhasil! (Simulasi)");
-    }, 1500);
+    }
   };
 
   return (
