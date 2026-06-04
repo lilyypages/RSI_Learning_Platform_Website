@@ -34,15 +34,16 @@ export default function ManajemenGuruRinci() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<TeacherDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState({ name: "", email: "", nip: "" });
+  const [addLoading, setAddLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchGurus = () =>
     fetch("/api/teachers")
       .then((r) => r.json())
-      .then((data) => {
-        if (data.success) setGurus(data.data);
-        setLoading(false);
-      });
-  }, []);
+      .then((data) => { if (data.success) setGurus(data.data); });
+
+  useEffect(() => { fetchGurus().then(() => setLoading(false)); }, []);
 
   const openDetail = async (id: string) => {
     setDetailLoading(true);
@@ -64,7 +65,7 @@ export default function ManajemenGuruRinci() {
           <h2 className="text-3xl font-black tracking-tight">Evaluasi Kinerja Pengajar</h2>
           <p className="text-indigo-200 font-medium mt-1">Pantau efektivitas materi dan perkembangan siswa per kelas.</p>
         </div>
-        <button className="bg-white text-indigo-900 px-6 py-4 rounded-2xl font-black flex items-center space-x-2 hover:bg-indigo-50 transition-all shadow-lg">
+        <button onClick={() => setShowAdd(true)} className="bg-white text-indigo-900 px-6 py-4 rounded-2xl font-black flex items-center space-x-2 hover:bg-indigo-50 transition-all shadow-lg">
           <UserPlus size={18} />
           <span>Tambah Tenaga Pendidik</span>
         </button>
@@ -203,6 +204,57 @@ export default function ManajemenGuruRinci() {
       {detailLoading && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <Loader2 className="animate-spin text-white" size={40} />
+        </div>
+      )}
+
+      {/* Modal Tambah Guru */}
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setShowAdd(false)}>
+          <div className="bg-white rounded-[40px] p-8 max-w-lg w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-black text-slate-800">Tambah Tenaga Pendidik</h3>
+              <button onClick={() => setShowAdd(false)} className="p-2 hover:bg-slate-100 rounded-xl"><X size={20} /></button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setAddLoading(true);
+              const res = await fetch("/api/teachers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(addForm),
+              });
+              const data = await res.json();
+              setAddLoading(false);
+              if (data.success) {
+                setShowAdd(false);
+                setAddForm({ name: "", email: "", nip: "" });
+                fetchGurus();
+              } else {
+                alert(data.error || "Gagal menambahkan guru");
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Nama Lengkap</label>
+                <input required value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                  className="w-full mt-1 p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold text-slate-800 outline-none focus:ring-4 focus:ring-indigo-500/10" />
+              </div>
+              <div>
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Email</label>
+                <input type="email" required value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                  className="w-full mt-1 p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold text-slate-800 outline-none focus:ring-4 focus:ring-indigo-500/10" />
+              </div>
+              <div>
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">NIP (opsional)</label>
+                <input value={addForm.nip} onChange={(e) => setAddForm({ ...addForm, nip: e.target.value })}
+                  className="w-full mt-1 p-4 bg-slate-50 rounded-2xl border border-slate-200 font-bold text-slate-800 outline-none focus:ring-4 focus:ring-indigo-500/10" />
+              </div>
+              <p className="text-xs text-slate-400 font-bold">Password default: <span className="font-black text-slate-600">admin123</span></p>
+              <button type="submit" disabled={addLoading}
+                className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-black hover:bg-indigo-700 transition-all disabled:opacity-50">
+                {addLoading ? "Menyimpan..." : "Simpan"}
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
