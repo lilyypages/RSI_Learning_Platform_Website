@@ -10,7 +10,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
-import type { Role } from "@prisma/client";
+export type Role = "STUDENT" | "TEACHER" | "PARENT" | "PRINCIPAL";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

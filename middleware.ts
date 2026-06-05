@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
-import type { Role } from "@prisma/client";
+import type { Role } from "@/lib/auth";
 
 // ── Route Definitions ─────────────────────────────────────────────────────────
 

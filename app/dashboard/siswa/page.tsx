@@ -95,15 +95,15 @@ export default async function SiswaDashboardPage() {
   if (!student) redirect("/auth/login");
 
   // ── Hitung stats ───────────────────────────────────────────────────────────
-  const materiSelesai = student.progress.reduce((sum, p) => {
+  const materiSelesai = student.progress.reduce((sum: number, p) => {
     const total = p.classSubject.materials.length;
-    const done = Math.round((p.completionPercent / 100) * total);
+    const done = Math.round(((p.completionPercent ?? 0) / 100) * total);
     return sum + done;
   }, 0);
 
   // Rank: berapa siswa dengan total_points lebih tinggi + 1
   const rank = await db.student.count({
-    where: { totalPoints: { gt: student.totalPoints } },
+    where: { totalPoints: { gt: student.totalPoints ?? 0 } },
   });
 
   const firstName = student.user.name.split(" ")[0];
@@ -115,11 +115,11 @@ export default async function SiswaDashboardPage() {
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-indigo-700 rounded-[28px] p-7 text-white shadow-xl shadow-indigo-200">
         <div className="relative z-10">
-          {student.currentStreak > 0 && (
+          {(student.currentStreak ?? 0) > 0 && (
             <div className="flex items-center gap-2 mb-2">
               <Flame size={16} className="text-orange-400 fill-orange-400" />
               <span className="text-xs font-bold text-indigo-200 uppercase tracking-widest">
-                {student.currentStreak} Hari Berturut-turut!
+                {student.currentStreak ?? 0} Hari Berturut-turut!
               </span>
             </div>
           )}
@@ -127,8 +127,8 @@ export default async function SiswaDashboardPage() {
             Semangat Belajar, {firstName}! 👋
           </h1>
           <p className="text-indigo-200 text-sm max-w-md leading-relaxed">
-            {student.currentStreak >= 3
-              ? `Streak ${student.currentStreak} hari! Terus pertahankan ya.`
+            {(student.currentStreak ?? 0) >= 3
+              ? `Streak ${student.currentStreak ?? 0} hari! Terus pertahankan ya.`
               : "Yuk mulai belajar hari ini dan bangun streak kamu!"}
           </p>
         </div>
@@ -138,7 +138,7 @@ export default async function SiswaDashboardPage() {
             <span
               key={i}
               className={`text-xl transition-all ${
-                i < student.livesRemaining ? "opacity-100" : "opacity-20"
+                i < (student.livesRemaining ?? 0) ? "opacity-100" : "opacity-20"
               }`}
             >
               ❤️
@@ -162,7 +162,7 @@ export default async function SiswaDashboardPage() {
           },
           {
             label: "Poin Belajar",
-            value: student.totalPoints.toLocaleString("id-ID"),
+            value: (student.totalPoints ?? 0).toLocaleString("id-ID"),
             icon: Star,
             colorIcon: "text-yellow-600",
             colorBg: "bg-yellow-50",
@@ -216,8 +216,8 @@ export default async function SiswaDashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {student.progress.map((p, idx) => {
               const palette = getSubjectColor(idx);
-              const level = getLevelColor(p.adaptiveLevel);
-              const pct = Math.round(p.completionPercent);
+              const level = getLevelColor(p.adaptiveLevel ?? "STANDARD");
+              const pct = Math.round(p.completionPercent ?? 0);
               const isNew = pct === 0;
               const subjectName = p.classSubject.subject.name;
               const classSubjectId = p.classSubject.id;

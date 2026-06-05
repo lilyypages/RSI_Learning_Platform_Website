@@ -4,22 +4,15 @@
 // Hapus cookie sesi → redirect ke /auth/login
 // =============================================================================
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { clearSessionCookie } from "@/lib/auth";
 
-export async function POST() {
+export async function POST(_req: NextRequest) {
   try {
     await clearSessionCookie();
-
-    return NextResponse.json(
-      { success: true, message: "Logout berhasil" },
-      { status: 200 }
-    );
+    return NextResponse.redirect(new URL("/auth/login", _req.url));
   } catch (error) {
     console.error("[LOGOUT_ERROR]", error);
-    return NextResponse.json(
-      { success: false, message: "Terjadi kesalahan server" },
-      { status: 500 }
-    );
+    return NextResponse.redirect(new URL("/auth/login", _req.url));
   }
 }

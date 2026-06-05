@@ -36,7 +36,7 @@ export default async function SiswaLayout({
   const firstName = student.user.name.split(" ")[0];
   const initials = student.user.name
     .split(" ")
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
@@ -93,7 +93,7 @@ export default async function SiswaLayout({
               {student.currentStreak}d streak
             </span>
             <span className="flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100">
-              {"❤️".repeat(Math.max(0, student.livesRemaining))} {student.livesRemaining}
+              {"❤️".repeat(Math.max(0, student.livesRemaining ?? 0))} {student.livesRemaining ?? 0}
             </span>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default async function SiswaLayout({
               Total Poin
             </p>
             <p className="text-2xl font-black text-indigo-700">
-              {student.totalPoints.toLocaleString("id-ID")}
+              {(student.totalPoints ?? 0).toLocaleString("id-ID")}
               <span className="text-sm font-medium text-indigo-400 ml-1">pts</span>
             </p>
           </div>
