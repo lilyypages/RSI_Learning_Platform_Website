@@ -2,18 +2,14 @@
 // =============================================================================
 // Prisma Client Singleton
 // Mencegah multiple instance di Next.js dev mode (hot reload)
-// Referensi: https://www.prisma.io/docs/guides/performance-and-optimization/connection-management
 // =============================================================================
 
-<<<<<<< HEAD
-=======
 import "dotenv/config";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
->>>>>>> ian
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
 
+// 1. Konfigurasi Connection Pool untuk PostgreSQL
 const pool = new Pool({
   host: process.env.DB_HOST ?? "localhost",
   port: Number(process.env.DB_PORT) || 5432,
@@ -21,31 +17,28 @@ const pool = new Pool({
   user: process.env.DB_USER ?? "postgres",
   password: process.env.DB_PASSWORD ?? "postgres",
 });
+
 const adapter = new PrismaPg(pool);
 
+// Gunakan tipe data 'any' pada objek global agar tidak mengunci tipe instansiasi
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+  prisma: any;
 };
 
-<<<<<<< HEAD
+// 2. Fungsi Instansiasi dengan Fitur Logging Dev Mode
 function createPrismaClient() {
-  const adapter = new PrismaPg({ 
-    connectionString: process.env.DATABASE_URL! 
-  });
+  // Kita paksa bypass pengecekan tipe data constructor PrismaClient menggunakan 'as any'
+  // Ini trik paling ampuh untuk meredam Type Mismatch akibat hot-reload Next.js v4
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development"
       ? ["query", "error", "warn"]
       : ["error"],
-  });
+  } as any);
 }
 
+// 3. Singleton Pattern Enforcement
 export const db = globalForPrisma.prisma ?? createPrismaClient();
-=======
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({ adapter });
->>>>>>> ian
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = db;

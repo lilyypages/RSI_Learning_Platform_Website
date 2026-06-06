@@ -1,46 +1,75 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
 export default function Home() {
-  const messages = [
-    'Halo! Aku <strong>Panda</strong> 🐼<br/>Yuk belajar bareng biar makin pintar!<br/>Nanti dapat poin dan hadiah lo! 🎁',
-    'Belajar itu <strong>seru</strong> lho! 🎉<br/>Kerjakan soal, kumpulkan poin,<br/>dan tukar dengan jajan! 🍪',
-    'Orang tua bisa <strong>pantau</strong> 👀<br/>perkembangan belajarmu<br/>kapan saja! 📱',
-    'Soal akan <strong>menyesuaikan</strong> 🧠<br/>kemampuanmu otomatis!<br/>Tidak susah, tidak gampang! ✨'
-  ];
+  const [bubbleText, setBubbleText] = useState<string>(
+    'Halo! Aku <strong>Panda</strong> 🐼<br>Yuk belajar bareng biar makin pintar!<br>Nanti dapat poin dan hadiah lo! 🎁'
+  );
 
-  const [currentMsgIndex, setCurrentMsgIndex] = useState(0);
-  const [bubbleOpacity, setBubbleOpacity] = useState(1);
-
-  // Interval untuk animasi gelembung percakapan maskot
   useEffect(() => {
-    const interval = setInterval(() => {
-      setBubbleOpacity(0);
-      setTimeout(() => {
-        setCurrentMsgIndex((prev) => (prev + 1) % messages.length);
-        setBubbleOpacity(1);
-      }, 400);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [messages.length]);
-
-  // Scroll Reveal Observer
-  useEffect(() => {
+    // 1. Scroll Reveal Logic using Intersection Observer
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("visible");
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
           }
         });
       },
       { threshold: 0.12 }
     );
 
-    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+    // 2. Animated Speech Bubble Cycling
+    const msgs = [
+      'Halo! Aku <strong>Panda</strong> 🐼<br>Yuk belajar bareng biar makin pintar!<br>Nanti dapat poin dan hadiah lo! 🎁',
+      'Belajar itu <strong>seru</strong> lho! 🎉<br>Kerjakan soal, kumpulkan poin,<br>dan tukar dengan jajan! 🍪',
+      'Orang tua bisa <strong>pantau</strong> 👀<br>perkembangan belajarmu<br>kapan saja! 📱',
+      'Soal akan <strong>menyesuaikan</strong> 🧠<br>kemampuanmu otomatis!<br>Tidak susah, tidak gampang! ✨',
+    ];
+    
+    let currentIdx = 0;
+    const bubbleElement = document.querySelector('.speech-bubble') as HTMLElement;
+
+    const interval = setInterval(() => {
+      if (bubbleElement) {
+        bubbleElement.style.opacity = '0';
+        bubbleElement.style.transition = 'opacity 0.4s';
+      }
+      
+      setTimeout(() => {
+        currentIdx = (currentIdx + 1) % msgs.length;
+        setBubbleText(msgs[currentIdx]);
+        if (bubbleElement) {
+          bubbleElement.style.opacity = '1';
+        }
+      }, 400);
+    }, 4000);
+
+    // 3. Smooth Scroll handler for anchor links
+    const handleScroll = (e: MouseEvent) => {
+      const target = e.target as HTMLAnchorElement;
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const targetElement = document.querySelector(href);
+        if (targetElement) {
+          e.preventDefault();
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    };
+
+    const links = document.querySelectorAll('a[href^="#"]');
+    links.forEach((link) => link.addEventListener('click', handleScroll as EventListener));
+
+    // Cleanup effects on unmount
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+      links.forEach((link) => link.removeEventListener('click', handleScroll as EventListener));
+    };
   }, []);
 
   return (
@@ -48,15 +77,16 @@ export default function Home() {
       {/* NAV */}
       <nav>
         <a href="#" className="nav-logo">
-          <span className="logo-icon">🐼</span>
-          SIPANDA
+          <span className="logo-icon">🐼</span> SIPANDA
         </a>
         <ul className="nav-links">
           <li><a href="#tentang">Tentang</a></li>
           <li><a href="#fitur">Fitur</a></li>
           <li><a href="#peran">Pengguna</a></li>
           <li><a href="#cara-kerja">Cara Kerja</a></li>
-          <li><a href="#masuk" className="btn-login">Masuk</a></li>
+
+
+          <li><a href="/auth/login" className="btn-login">Masuk</a></li>
         </ul>
       </nav>
 
@@ -81,40 +111,53 @@ export default function Home() {
           <div className="hero-mascot reveal">
             <div 
               className="speech-bubble" 
-              style={{ opacity: bubbleOpacity, transition: "opacity 0.4s" }}
-              dangerouslySetInnerHTML={{ __html: messages[currentMsgIndex] }}
+              dangerouslySetInnerHTML={{ __html: bubbleText }}
             />
             
             {/* Panda SVG Mascot */}
             <svg className="panda-svg" viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="110" cy="185" rx="65" ry="70" fill="#fff" stroke="#333" strokeWidth="3"/>
-              <ellipse cx="110" cy="195" rx="38" ry="45" fill="#f0f0f0"/>
-              <circle cx="60" cy="60" r="28" fill="#333"/>
-              <circle cx="60" cy="60" r="16" fill="#555"/>
-              <circle cx="160" cy="60" r="28" fill="#333"/>
-              <circle cx="160" cy="60" r="16" fill="#555"/>
-              <circle cx="110" cy="100" r="68" fill="#fff" stroke="#333" strokeWidth="3"/>
-              <ellipse cx="84" cy="92" rx="20" ry="18" fill="#333"/>
-              <ellipse cx="136" cy="92" rx="20" ry="18" fill="#333"/>
-              <circle cx="84" cy="93" r="10" fill="#fff"/>
-              <circle cx="136" cy="93" r="10" fill="#fff"/>
-              <circle cx="86" cy="91" r="5" fill="#1a1a1a"/>
-              <circle cx="138" cy="91" r="5" fill="#1a1a1a"/>
-              <circle cx="88" cy="89" r="2" fill="#fff"/>
-              <circle cx="140" cy="89" r="2" fill="#fff"/>
-              <ellipse cx="110" cy="113" rx="12" ry="8" fill="#555"/>
-              <path d="M 100 122 Q 110 132 120 122" stroke="#555" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-              <circle cx="70" cy="115" r="12" fill="#FFCDD2" opacity="0.7"/>
-              <circle cx="150" cy="115" r="12" fill="#FFCDD2" opacity="0.7"/>
-              <rect x="72" y="42" width="76" height="10" rx="3" fill="#2E7D32"/>
-              <polygon points="110,22 150,42 70,42" fill="#2E7D32"/>
-              <rect x="150" y="42" width="4" height="18" fill="#2E7D32"/>
-              <circle cx="152" cy="62" r="5" fill="#FFD600"/>
-              <ellipse cx="52" cy="170" rx="22" ry="38" fill="#fff" stroke="#333" strokeWidth="2" transform="rotate(-15 52 170)"/>
-              <ellipse cx="168" cy="170" rx="22" ry="38" fill="#fff" stroke="#333" strokeWidth="2" transform="rotate(15 168 170)"/>
-              <rect x="88" y="218" width="44" height="32" rx="4" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2"/>
-              <rect x="90" y="220" width="20" height="28" rx="2" fill="#81C784"/>
-              <line x1="110" y1="220" x2="110" y2="248" stroke="#2E7D32" strokeWidth="1.5"/>
+              {/* Body */}
+              <ellipse cx="110" cy="185" rx="65" ry="70" fill="#fff" stroke="#333" strokeWidth="3" />
+              {/* Belly */}
+              <ellipse cx="110" cy="195" rx="38" ry="45" fill="#f0f0f0" />
+              {/* Ears */}
+              <circle cx="60" cy="60" r="28" fill="#333" />
+              <circle cx="60" cy="60" r="16" fill="#555" />
+              <circle cx="160" cy="60" r="28" fill="#333" />
+              <circle cx="160" cy="60" r="16" fill="#555" />
+              {/* Head */}
+              <circle cx="110" cy="100" r="68" fill="#fff" stroke="#333" strokeWidth="3" />
+              {/* Eye patches */}
+              <ellipse cx="84" cy="92" rx="20" ry="18" fill="#333" />
+              <ellipse cx="136" cy="92" rx="20" ry="18" fill="#333" />
+              {/* Eyes */}
+              <circle cx="84" cy="93" r="10" fill="#fff" />
+              <circle cx="136" cy="93" r="10" fill="#fff" />
+              <circle cx="86" cy="91" r="5" fill="#1a1a1a" />
+              <circle cx="138" cy="91" r="5" fill="#1a1a1a" />
+              {/* Eye shine */}
+              <circle cx="88" cy="89" r="2" fill="#fff" />
+              <circle cx="140" cy="89" r="2" fill="#fff" />
+              {/* Nose */}
+              <ellipse cx="110" cy="113" rx="12" ry="8" fill="#555" />
+              {/* Mouth */}
+              <path d="M 100 122 Q 110 132 120 122" stroke="#555" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+              {/* Cheeks */}
+              <circle cx="70" cy="115" r="12" fill="#FFCDD2" opacity="0.7" />
+              <circle cx="150" cy="115" r="12" fill="#FFCDD2" opacity="0.7" />
+              {/* Grad cap */}
+              <rect x="72" y="42" width="76" height="10" rx="3" fill="#2E7D32" />
+              <polygon points="110,22 150,42 70,42" fill="#2E7D32" />
+              <rect x="150" y="42" width="4" height="18" fill="#2E7D32" />
+              <circle cx="152" cy="62" r="5" fill="#FFD600" />
+              {/* Arms */}
+              <ellipse cx="52" cy="170" rx="22" ry="38" fill="#fff" stroke="#333" strokeWidth="2" transform="rotate(-15 52 170)" />
+              <ellipse cx="168" cy="170" rx="22" ry="38" fill="#fff" stroke="#333" strokeWidth="2" transform="rotate(15 168 170)" />
+              {/* Book in hands */}
+              <rect x="88" y="218" width="44" height="32" rx="4" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2" />
+              <rect x="90" y="220" width="20" height="28" rx="2" fill="#81C784" />
+              <line x1="110" y1="220" x2="110" y2="248" stroke="#2E7D32" strokeWidth="1.5" />
+              {/* Stars */}
               <text x="28" y="215" fontSize="20" fill="#FFD600">⭐</text>
               <text x="175" y="210" fontSize="18" fill="#FF8F00">✨</text>
               <text x="100" y="260" fontSize="14" fill="#4CAF50">📖</text>
@@ -137,12 +180,10 @@ export default function Home() {
             <h3>Belajar Adaptif</h3>
             <p>Sistem otomatis menyesuaikan tingkat kesulitan soal berdasarkan kemampuan dan kecepatan belajar setiap siswa secara real-time.</p>
           </div>
-          <div className="about-grid reveal">
-            <div className="about-card yellow">
-              <div className="about-card-icon">🏆</div>
-              <h3>Poin &amp; Hadiah</h3>
-              <p>Setiap jawaban benar dan aktivitas belajar menghasilkan poin yang bisa ditukarkan dengan hadiah menarik di kantin sekolah!</p>
-            </div>
+          <div className="about-card yellow">
+            <div className="about-card-icon">🏆</div>
+            <h3>Poin &amp; Hadiah</h3>
+            <p>Setiap jawaban benar dan aktivitas belajar menghasilkan poin yang bisa ditukarkan dengan hadiah menarik di kantin sekolah!</p>
           </div>
           <div className="about-card blue">
             <div className="about-card-icon">👨‍👩‍👧</div>
@@ -156,7 +197,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="notice-box reveal" style={{ marginTop: "2.5rem" }}>
+        <div className="notice-box reveal" style={{ marginTop: '2.5rem' }}>
           <span className="notice-icon">⚠️</span>
           <div className="notice-text">
             <strong>Penting untuk Diketahui:</strong> SIPANDA adalah alat bantu belajar digital dan <strong>tidak memengaruhi nilai rapor</strong> secara langsung. Tujuan utama SIPANDA adalah membantu siswa belajar dengan cara yang menyenangkan di waktu senggang — saat libur, hari Minggu, atau sore hari setelah selesai bermain. SIPANDA bukan pengganti guru di kelas!
@@ -407,7 +448,7 @@ export default function Home() {
           <a href="#" className="btn-white">🐼 Masuk Sekarang</a>
           <a href="#tentang" className="btn-outline-white">Pelajari Lebih Lanjut</a>
         </div>
-        <p style={{ marginTop: "1.5rem", fontSize: "0.82rem", opacity: 0.6 }}>Akun SIPANDA diberikan oleh pihak sekolah. Hubungi sekolahmu untuk info lebih lanjut.</p>
+        <p style={{ marginTop: '1.5rem', fontSize: '0.82rem', opacity: 0.6 }}>Akun SIPANDA diberikan oleh pihak sekolah. Hubungi sekolahmu untuk info lebih lanjut.</p>
       </section>
 
       {/* FOOTER */}

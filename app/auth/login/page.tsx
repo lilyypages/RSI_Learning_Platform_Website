@@ -2,134 +2,292 @@
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, Mail, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
- 
+import Link from "next/link";
+
 export default function LoginPage() {
   const [email, setEmail]               = useState("");
   const [password, setPassword]         = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading]       = useState(false);
   const [error, setError]               = useState("");
- 
+
   const router       = useRouter();
   const searchParams = useSearchParams();
- 
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
- 
+
     try {
       const res = await fetch("/api/auth/login", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email, password }),
       });
- 
+
       const data = await res.json();
- 
+
       if (!res.ok || !data.success) {
-        setError(data.message ?? "Login gagal. Periksa email dan password.");
+        setError(data.message ?? "Login gagal. Periksa kembali email dan kata sandi Anda.");
         return;
       }
- 
-      // Redirect: gunakan callbackUrl jika ada, atau dashboard dari API
+
       const callbackUrl = searchParams.get("callbackUrl");
       router.push(callbackUrl ?? data.redirectTo ?? "/dashboard");
-      router.refresh(); // supaya middleware baca cookie baru
- 
+      router.refresh();
     } catch {
-      setError("Tidak dapat terhubung ke server. Coba lagi.");
+      setError("Gagal menyambungkan ke server. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
   };
- 
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
- 
+    <div className="login-viewport">
+      {/* Inject CSS langsung untuk menjamin keindahan layout bebas dari error Tailwind */}
+      <style>{`
+        .login-viewport {
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #f1f5f9;
+          font-family: var(--font-nunito), -apple-system, sans-serif;
+          box-sizing: border-box;
+          padding: 20px;
+        }
+        .login-card {
+          background: #ffffff;
+          width: 100%;
+          max-width: 400px;
+          border-radius: 16px;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05), 0 10px 15px -3px rgb(0 0 0 / 0.05);
+          padding: 40px 32px;
+          box-sizing: border-box;
+          border: 1px solid #e2e8f0;
+        }
+        .login-header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+        .login-brand-icon {
+          font-size: 32px;
+          margin-bottom: 12px;
+          display: inline-block;
+        }
+        .login-title {
+          font-size: 24px;
+          font-weight: 700;
+          color: #0f172a;
+          margin: 0 0 8px 0;
+          letter-spacing: -0.5px;
+        }
+        .login-subtitle {
+          font-size: 13px;
+          color: #64748b;
+          margin: 0;
+          line-height: 1.5;
+        }
+        .form-group {
+          margin-bottom: 20px;
+          display: flex;
+          flex-direction: column;
+        }
+        .form-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: #334155;
+          margin-bottom: 6px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .input-icon-left {
+          position: absolute;
+          left: 14px;
+          color: #94a3b8;
+          display: flex;
+          align-items: center;
+          pointer-events: none;
+        }
+        .input-field {
+          width: 100%;
+          padding: 12px 16px 12px 42px;
+          background-color: #f8fafc;
+          border: 1px solid #cbd5e1;
+          border-radius: 10px;
+          font-size: 14px;
+          color: #334155;
+          outline: none;
+          transition: all 0.2s ease;
+          box-sizing: border-box;
+        }
+        .input-field:focus {
+          background-color: #ffffff;
+          border-color: #0ea5e9;
+          box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+        }
+        .input-toggle-right {
+          position: absolute;
+          right: 14px;
+          color: #94a3b8;
+          background: none;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          padding: 0;
+        }
+        .input-toggle-right:hover {
+          color: #64748b;
+        }
+        .btn-submit {
+          width: 100%;
+          height: 44px;
+          background-color: #0f172a;
+          color: #ffffff;
+          border: none;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 24px;
+        }
+        .btn-submit:hover {
+          background-color: #1e293b;
+        }
+        .btn-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .error-container {
+          background-color: #fef2f2;
+          border: 1px solid #fee2e2;
+          color: #991b1b;
+          padding: 12px;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 500;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .dev-hint {
+          margin-top: 24px;
+          padding: 12px;
+          background-color: #f8fafc;
+          border: 1px solid #f1f5f9;
+          border-radius: 10px;
+          font-size: 11px;
+          color: #64748b;
+          text-align: center;
+          line-height: 1.6;
+        }
+        .dev-token {
+          font-family: monospace;
+          background: #ffffff;
+          padding: 2px 6px;
+          border-radius: 4px;
+          border: 1px solid #e2e8f0;
+          color: #334155;
+          font-weight: 600;
+        }
+        .login-footer {
+          text-align: center;
+          font-size: 11px;
+          color: #94a3b8;
+          margin-top: 24px;
+          line-height: 1.5;
+        }
+      `}</style>
+
+      <div className="login-card">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
-            <Lock className="text-white w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-800">Selamat Datang</h1>
-          <p className="text-slate-500 mt-2 text-sm">
-            Silakan masukkan email dan kata sandi Anda untuk mengakses platform pembelajaran.
-          </p>
+        <div className="login-header">
+          <Link href="/" className="login-brand-icon">🐼</Link>
+          <h1 className="login-title">Selamat Datang Kembali</h1>
+          <p className="login-subtitle">Silakan masuk menggunakan akun akademik Anda.</p>
         </div>
- 
-        {/* Error banner */}
+
+        {/* Error Banner */}
         {error && (
-          <div className="mb-5 flex items-center space-x-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
-            <AlertCircle size={16} className="flex-shrink-0" />
+          <div className="error-container">
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
             <span>{error}</span>
           </div>
         )}
- 
-        <form onSubmit={handleLogin} className="space-y-5">
- 
+
+        {/* Form */}
+        <form onSubmit={handleLogin}>
           {/* Email */}
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700 ml-1">Email</label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                <Mail size={18} />
-              </div>
+          <div className="form-group">
+            <label className="form-label">Alamat Email</label>
+            <div className="input-wrapper">
+              <div className="input-icon-left"><Mail size={16} /></div>
               <input
                 type="email"
                 required
-                className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                placeholder="contoh@email.com"
+                className="input-field"
+                placeholder="nama@sekolah.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
- 
+
           {/* Password */}
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700 ml-1">Kata Sandi</label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                <Lock size={18} />
-              </div>
+          <div className="form-group">
+            <label className="form-label">Kata Sandi</label>
+            <div className="input-wrapper">
+              <div className="input-icon-left"><Lock size={16} /></div>
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                className="block w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="input-field"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                className="input-toggle-right"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
- 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Masuk ke Dashboard"}
+
+          {/* Button */}
+          <button type="submit" disabled={isLoading} className="btn-submit">
+            {isLoading ? <Loader2 className="animate-spin" size={16} /> : "Masuk ke Platform"}
           </button>
         </form>
- 
-        {/* Dev hint — remove in production */}
-        <div className="mt-6 p-3 bg-slate-50 rounded-xl text-xs text-slate-400 text-center">
-          Test: <span className="font-mono">guru@test.com</span> / <span className="font-mono">password123</span>
+
+        {/* Dev Hint */}
+        <div className="dev-hint">
+          💡 Mode Demo: <br />
+          Email: <span className="dev-token">guru@test.com</span> | Sandi: <span className="dev-token">password123</span>
         </div>
- 
-        <div className="mt-4 text-center text-xs text-slate-400 leading-relaxed">
+
+        {/* Footer */}
+        <div className="login-footer">
           Sistem Informasi Pembelajaran Adaptif <br />
-          &copy; 2026 - Lingkungan Sekolah Dasar
+          &copy; 2026 - SIPANDA Team
         </div>
       </div>
     </div>
