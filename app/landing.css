@@ -756,5 +756,3 @@ display: block; /* Memastikan dia bertindak sebagai block layout */
     opacity: 1;
     transform: translateY(0);
   }
-
-  .landingPageWrapper .reveal.visible
