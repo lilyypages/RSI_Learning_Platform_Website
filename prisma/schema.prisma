@@ -17,6 +17,7 @@ model User {
   isActive         Boolean?       @default(true) @map("is_active")
   createdBy        String?        @map("created_by") @db.Uuid
   createdAt        DateTime?      @default(now()) @map("created_at") @db.Timestamptz(6)
+  auditLogs        AuditLog[]
   receivedMessages Message[]      @relation("ReceivedMessages")
   sentMessages     Message[]      @relation("SentMessages")
   notifications    Notification[]
@@ -26,7 +27,6 @@ model User {
   teacher          Teacher?
   creator          User?          @relation("UserCreator", fields: [createdBy], references: [id], onUpdate: NoAction, map: "fk_users_creator")
   createdUsers     User[]         @relation("UserCreator")
-  auditLogs        AuditLog[]
 
   @@index([email], map: "idx_users_email")
   @@index([role], map: "idx_users_role")
@@ -292,12 +292,12 @@ model Message {
 }
 
 model AuditLog {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String?   @map("user_id") @db.Uuid
-  action    String?   @db.VarChar(100)
-  tableName String?   @map("table_name") @db.VarChar(100)
-  recordId  String?   @map("record_id") @db.Uuid
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  action    String?   @db.VarChar(100)
+  recordId  String?   @map("record_id") @db.Uuid
+  tableName String?   @map("table_name") @db.VarChar(100)
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user      User?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("audit_logs")

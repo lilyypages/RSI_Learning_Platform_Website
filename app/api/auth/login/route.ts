@@ -43,9 +43,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Gunakan pesan generik — jangan bocorkan "email tidak ditemukan"
     if (!user) {
-      await logLoginAttempt(null, email, false, req);
       return NextResponse.json(
         { success: false, message: "Email atau password salah" },
         { status: 401 }
@@ -54,32 +52,33 @@ export async function POST(req: NextRequest) {
 
     // 3. Cek akun aktif
     if (!user.isActive) {
-      await logLoginAttempt(user.id, email, false, req);
       return NextResponse.json(
-        { success: false, message: "Akun dinonaktifkan. Hubungi administrator." },
+        {
+          success: false,
+          message: "Akun dinonaktifkan. Hubungi administrator.",
+        },
         { status: 403 }
       );
     }
 
     // 4. Verifikasi password
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.passwordHash
+    );
+
     if (!isPasswordValid) {
-      await logLoginAttempt(user.id, email, false, req);
-      // Notifikasi ke Kepsek jika gagal login
-      await notifyKepsekOnFailedLogin(user.id, user.name, email);
+      await notifyKepsekOnFailedLogin(
+        user.id,
+        user.name,
+        email
+      );
+
       return NextResponse.json(
         { success: false, message: "Email atau password salah" },
         { status: 401 }
       );
     }
-
-    // 5. Simpan audit log login sukses
-    await createAuditLog({
-      userId: user.id,
-      event: "LOGIN_SUCCESS",
-      ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
-      userAgent: req.headers.get("user-agent") ?? "unknown",
-    });
 
     // 5. Sign JWT
     const token = await signToken({
@@ -92,10 +91,7 @@ export async function POST(req: NextRequest) {
     // 6. Set cookie HttpOnly
     await setSessionCookie(token);
 
-    // 7. Catat log login sukses
-    await logLoginAttempt(user.id, email, true, req);
-
-    // 8. Return data user (tanpa passwordHash)
+    // 7. Return data user
     return NextResponse.json(
       {
         success: true,
@@ -103,53 +99,24 @@ export async function POST(req: NextRequest) {
         user: {
           id: user.id,
           email: user.email,
-      role: user.role as Role,
+          role: user.role as Role,
           name: user.name,
           imageUrl: user.imageUrl,
         },
-        // redirectTo: ditentukan di client berdasarkan role
         redirectTo: getDashboardByRole(user.role),
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("[LOGIN_ERROR]", error);
+
     return NextResponse.json(
-      { success: false, message: "Terjadi kesalahan server" },
+      {
+        success: false,
+        message: "Terjadi kesalahan server",
+      },
       { status: 500 }
     );
-  }
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function getClientIp(req: NextRequest): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return req.headers.get("x-real-ip") ?? "127.0.0.1";
-}
-
-async function logLoginAttempt(
-  userId: string | null,
-  email: string,
-  success: boolean,
-  req: NextRequest,
-) {
-  try {
-    const ip = getClientIp(req);
-    const userAgent = req.headers.get("user-agent") ?? "";
-
-    await db.auditLog.create({
-      data: {
-        userId,
-        actionType: success ? "LOGIN_OK" : "LOGIN_FAIL",
-        ipAddress: ip,
-        userAgent,
-        metadata: { email },
-      },
-    });
-  } catch (err) {
-    console.error("[LOGIN_AUDIT_ERROR]", err);
   }
 }
 
@@ -159,13 +126,15 @@ async function notifyKepsekOnFailedLogin(
   email: string,
 ) {
   try {
-    const ip = "..."  // already logged in audit — skip here
-
-    // Ambil Kepsek
     const kepsek = await db.user.findFirst({
-      where: { role: "PRINCIPAL" },
-      select: { id: true },
+      where: {
+        role: "PRINCIPAL",
+      },
+      select: {
+        id: true,
+      },
     });
+
     if (!kepsek) return;
 
     await db.notification.create({
@@ -182,12 +151,14 @@ async function notifyKepsekOnFailedLogin(
 }
 
 // ── Helper: route dashboard per role ─────────────────────────────────────────
+
 function getDashboardByRole(role: string): string {
   const routes: Record<string, string> = {
-    STUDENT:   "/dashboard/siswa",
-    TEACHER:   "/dashboard/guru",
-    PARENT:    "/dashboard/ortu",
+    STUDENT: "/dashboard/siswa",
+    TEACHER: "/dashboard/guru",
+    PARENT: "/dashboard/ortu",
     PRINCIPAL: "/dashboard/kepsek",
   };
+
   return routes[role] ?? "/dashboard";
 }
