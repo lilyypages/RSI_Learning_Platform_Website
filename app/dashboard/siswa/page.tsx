@@ -30,8 +30,8 @@ function getLevelColor(level: string) {
 
 function getSubjectColor(index: number) {
   const palettes = [
-    { accent: "border-b-indigo-500", badgeBg: "bg-indigo-100", badgeText: "text-indigo-700", bar: "bg-indigo-500", btn: "bg-indigo-600 hover:bg-indigo-700" },
-    { accent: "border-b-orange-500", badgeBg: "bg-orange-100", badgeText: "text-orange-700", bar: "bg-orange-500", btn: "bg-slate-900 hover:bg-slate-700" },
+    { accent: "border-b-[#4CAF50]", badgeBg: "bg-[#E8F5E9]", badgeText: "text-[#2E7D32]", bar: "bg-[#4CAF50]", btn: "bg-[#4CAF50] hover:bg-[#2E7D32]" },
+    { accent: "border-b-orange-500", badgeBg: "bg-orange-100", badgeText: "text-orange-700", bar: "bg-orange-500", btn: "bg-orange-600 hover:bg-orange-700" },
     { accent: "border-b-teal-500",   badgeBg: "bg-teal-100",   badgeText: "text-teal-700",   bar: "bg-teal-500",   btn: "bg-teal-700 hover:bg-teal-800" },
     { accent: "border-b-rose-500",   badgeBg: "bg-rose-100",   badgeText: "text-rose-700",   bar: "bg-rose-500",   btn: "bg-rose-700 hover:bg-rose-800" },
   ];
@@ -113,12 +113,12 @@ export default async function SiswaDashboardPage() {
     <div className="space-y-7 max-w-5xl mx-auto">
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-indigo-700 rounded-[28px] p-7 text-white shadow-xl shadow-indigo-200">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#2E7D32] to-[#1B5E20] rounded-[28px] p-7 text-white shadow-xl shadow-[#2E7D32]/20">
         <div className="relative z-10">
           {(student.currentStreak ?? 0) > 0 && (
             <div className="flex items-center gap-2 mb-2">
               <Flame size={16} className="text-orange-400 fill-orange-400" />
-              <span className="text-xs font-bold text-indigo-200 uppercase tracking-widest">
+              <span className="text-xs font-bold text-[#A5D6A7] uppercase tracking-widest">
                 {student.currentStreak ?? 0} Hari Berturut-turut!
               </span>
             </div>
@@ -126,7 +126,7 @@ export default async function SiswaDashboardPage() {
           <h1 className="text-2xl font-black mb-1.5">
             Semangat Belajar, {firstName}! 👋
           </h1>
-          <p className="text-indigo-200 text-sm max-w-md leading-relaxed">
+          <p className="text-[#A5D6A7] text-sm max-w-md leading-relaxed">
             {(student.currentStreak ?? 0) >= 3
               ? `Streak ${student.currentStreak ?? 0} hari! Terus pertahankan ya.`
               : "Yuk mulai belajar hari ini dan bangun streak kamu!"}
@@ -200,7 +200,7 @@ export default async function SiswaDashboardPage() {
           </h3>
           <Link
             href="/dashboard/siswa/mapel"
-            className="text-xs text-indigo-600 font-semibold hover:underline flex items-center gap-1"
+            className="text-xs text-[#4CAF50] font-semibold hover:underline flex items-center gap-1"
           >
             Lihat semua <ArrowRight size={13} />
           </Link>
@@ -281,7 +281,7 @@ export default async function SiswaDashboardPage() {
 
                     {/* CTA Button */}
                     <Link
-                      href={`/dashboard/siswa/belajar/${classSubjectId}`}
+                      href={`/dashboard/siswa/mapel/${classSubjectId}`}
                     >
                       <button
                         className={`w-full ${
