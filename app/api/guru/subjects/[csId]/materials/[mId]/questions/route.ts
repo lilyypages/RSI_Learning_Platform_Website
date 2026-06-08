@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ csId
   });
 
   const counts = { EASY: 0, MEDIUM: 0, HARD: 0 };
-  questions.forEach((q) => { const d = q.difficulty || "MEDIUM"; counts[d as keyof typeof counts]++; });
+  questions.forEach((q: { difficulty?: string | null }) => { const d = q.difficulty || "MEDIUM"; counts[d as keyof typeof counts]++; });
 
   return NextResponse.json({
     success: true,
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ csId
       subjectName: material.classSubject.subject.name,
       className: material.classSubject.class.name,
       materialTitle: material.title,
-      questions: questions.map((q) => ({
+      questions: questions.map((q: any) => ({
         id: q.id,
         questionText: q.questionText,
         options: q.options,

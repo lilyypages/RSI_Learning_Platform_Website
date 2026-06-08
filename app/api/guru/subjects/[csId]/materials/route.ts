@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ csId
       subjectName: classSubject.subject.name,
       subjectCode: classSubject.subject.code,
       className: classSubject.class.name,
-      materials: materials.map((m) => ({
+      materials: materials.map((m: any) => ({
         id: m.id,
         title: m.title,
         contentText: m.contentText,

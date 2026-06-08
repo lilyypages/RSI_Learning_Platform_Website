@@ -26,25 +26,15 @@ export async function GET(req: NextRequest) {
 
   if (!teacher) return NextResponse.json({ error: "Guru tidak ditemukan" }, { status: 404 });
 
-  const homeroomClassIds = new Set(teacher.homeroomClass.map((c) => c.id));
-  const processedClassIds = new Set<string>();
+  const homeroomClassIds = new Set(teacher.homeroomClass.map((c: { id: string }) => c.id));
+  const processedClassIds = new Set<string>()
 
-  const classes = teacher.classSubjects.reduce<{
-    className: string;
-    classId: string;
-    isHomeroom: boolean;
-    totalStudents: number;
-    subjects: {
-      subjectName: string;
-      code: string;
-      avgCompletion: number;
-      studentsBehind: number;
-      students: { name: string; completionPercent: number | null; totalScore: number | null; adaptiveLevel: string | null }[];
-    }[];
-  }[]>((acc, cs) => {
-    let entry = acc.find((e) => e.classId === cs.class.id);
+
+
+  const classes = (teacher.classSubjects as Array<any>).reduce((acc: any[], cs: any) => {
+    let entry = acc.find((e: any) => e.classId === cs.class.id);
     if (!entry) {
-      const classStudents = teacher.homeroomClass.find((c) => c.id === cs.class.id)?.students ?? [];
+      const classStudents = teacher.homeroomClass.find((c: any) => c.id === cs.class.id)?.students ?? [];
       entry = {
         className: cs.class.name,
         classId: cs.class.id,
@@ -54,19 +44,19 @@ export async function GET(req: NextRequest) {
       };
       acc.push(entry);
     }
-    const students = cs.studentProgress.map((sp) => ({
+    const students = cs.studentProgress.map((sp: any) => ({
       name: sp.student.user.name,
       completionPercent: sp.completionPercent,
       totalScore: sp.totalScore,
       adaptiveLevel: sp.adaptiveLevel,
     }));
-    const vals = cs.studentProgress.map((sp) => sp.completionPercent ?? 0);
-    const avg = vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+    const vals = cs.studentProgress.map((sp: any) => sp.completionPercent ?? 0);
+    const avg = vals.length > 0 ? Math.round(vals.reduce((a: number, b: number) => a + b, 0) / vals.length) : 0;
     entry.subjects.push({
       subjectName: cs.subject.name,
       code: cs.subject.code,
       avgCompletion: avg,
-      studentsBehind: cs.studentProgress.filter((sp) => (sp.completionPercent ?? 0) < 70).length,
+      studentsBehind: cs.studentProgress.filter((sp: any) => (sp.completionPercent ?? 0) < 70).length,
       students,
     });
     entry.totalStudents = Math.max(entry.totalStudents, students.length);
@@ -74,11 +64,11 @@ export async function GET(req: NextRequest) {
   }, []);
 
   // totals across all classes (unique students behind)
-  const allProgress = teacher.classSubjects.flatMap((cs) => cs.studentProgress);
+  const allProgress = teacher.classSubjects.flatMap((cs: any) => cs.studentProgress);
   const behindStudentIds = new Set(
-    allProgress.filter((sp) => (sp.completionPercent ?? 0) < 70).map((sp) => sp.studentId)
+    allProgress.filter((sp: any) => (sp.completionPercent ?? 0) < 70).map((sp: any) => sp.studentId)
   );
-  const allVals = allProgress.map((sp) => sp.completionPercent ?? 0);
+  const allVals = allProgress.map((sp: any) => sp.completionPercent ?? 0);
 
   return NextResponse.json({
     success: true,
@@ -86,12 +76,12 @@ export async function GET(req: NextRequest) {
       teacher: {
         name: teacher.user.name,
         email: teacher.user.email,
-        homeroom: teacher.homeroomClass.length ? teacher.homeroomClass.map((c) => c.name).join(", ") : null,
+        homeroom: teacher.homeroomClass.length ? teacher.homeroomClass.map((c: any) => c.name).join(", ") : null,
       },
       classes,
       stats: {
-        totalStudents: new Set(allProgress.map((sp) => sp.studentId)).size,
-        avgCompletion: allVals.length > 0 ? Math.round(allVals.reduce((a, b) => a + b, 0) / allVals.length) : 0,
+        totalStudents: new Set(allProgress.map((sp: any) => sp.studentId)).size,
+        avgCompletion: allVals.length > 0 ? Math.round(allVals.reduce((a: number, b: number) => a + b, 0) / allVals.length) : 0,
         studentsBehind: behindStudentIds.size,
       },
     },

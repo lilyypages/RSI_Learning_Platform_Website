@@ -1,10 +1,10 @@
 "use client";
-import React, { useState } from "react";
-import { ChevronLeft, Save, Video, FileText, Plus, Trash2, Globe, CheckCircle2 } from "lucide-react";
+import React, { Suspense, useState } from "react";
+import { ChevronLeft, Save, Video, FileText, Plus, Trash2, Globe, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function InputMateri() {
+function InputMateriForm() {
   const searchParams   = useSearchParams();
   const classSubjectId = searchParams.get("classSubjectId") ?? "";
 
@@ -175,5 +175,13 @@ export default function InputMateri() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function InputMateri() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 size={24} className="animate-spin text-[#4CAF50]" /></div>}>
+      <InputMateriForm />
+    </Suspense>
   );
 }

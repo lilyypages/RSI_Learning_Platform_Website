@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { ChevronLeft, Plus, Brain, Trash2, Edit3, CheckCircle, X, Save } from "lucide-react";
+import React, { Suspense, useEffect, useState } from "react";
+import { ChevronLeft, Plus, Brain, Trash2, Edit3, CheckCircle, X, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -28,7 +28,7 @@ const LEVEL_BAR: Record<string, string> = {
   HARD: "bg-[#E53935]",   // Red
 };
 
-export default function KelolaSoal() {
+function KelolaSoalForm() {
   const searchParams   = useSearchParams();
   const materialId     = searchParams.get("materialId") ?? "";
   const classSubjectId = searchParams.get("classSubjectId") ?? "";
@@ -247,5 +247,13 @@ export default function KelolaSoal() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function KelolaSoal() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 size={24} className="animate-spin text-[#4CAF50]" /></div>}>
+      <KelolaSoalForm />
+    </Suspense>
   );
 }
