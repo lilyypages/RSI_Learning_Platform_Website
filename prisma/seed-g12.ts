@@ -1,16 +1,20 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+// Paksa dotenv mencari file .env di root folder proyek
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
+// Sederhanakan Pool langsung menggunakan DATABASE_URL agar aman dan tidak typo port
 const pool = new Pool({
-  host: process.env.DB_HOST ?? "localhost",
-  port: Number(process.env.DB_PORT) || 5433,
-  database: process.env.DB_NAME ?? "rsi_learning_platform",
-  user: process.env.DB_USER ?? "postgres",
-  password: process.env.DB_PASSWORD ?? "postgres",
+  connectionString: process.env.DATABASE_URL, 
 });
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+
+// ... sisa kode main() di bawahnya tetap sama ...
 
 type Q = { q: string; o: string[]; a: string; d: string };
 
