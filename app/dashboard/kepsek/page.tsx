@@ -20,44 +20,54 @@ export default function KepsekDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/progress?role=PRINCIPAL");
-        if (res.ok) {
-          const d = await res.json();
-          if (d.totalStudents !== undefined) setData(d);
+  async function load() {
+    try {
+      // Jalankan kedua fetch secara paralel agar tidak saling menunggu
+      const [progressRes, studentsRes] = await Promise.allSettled([
+        fetch("/api/progress?role=PRINCIPAL"),
+        fetch("/api/students?includeProgress=true")
+      ]);
+
+      // 1. Handle data progress sekolah
+      if (progressRes.status === "fulfilled" && progressRes.value.ok) {
+        const d = await progressRes.value.json();
+        if (d.totalStudents !== undefined) setData(d);
+      }
+
+      // 2. Handle data siswa untuk peringkat kelas
+      if (studentsRes.status === "fulfilled" && studentsRes.value.ok) {
+        const students: any[] = await studentsRes.value.json();
+
+        const classMap: Record<string, { total: number; count: number }> = {};
+        for (const s of students) {
+          const className = s.class?.name ?? "Tanpa Kelas"; // Ubah "Unknown" agar lebih informatif
+          const progList: any[] = s.progress ?? [];
+          const avg = progList.length > 0
+            ? progList.reduce((sum: number, p: any) => sum + (p.totalScore ?? 0), 0) / progList.length
+            : 0;
+            
+          if (!classMap[className]) classMap[className] = { total: 0, count: 0 };
+          classMap[className].total += avg;
+          classMap[className].count += 1;
         }
 
-        const studRes = await fetch("/api/students?includeProgress=true");
-        if (studRes.ok) {
-          const students: any[] = await studRes.json();
+        const ranked: ClassRank[] = Object.entries(classMap)
+          .map(([name, { total, count }]) => ({
+            name,
+            pct: Math.round(count > 0 ? total / count : 0),
+          }))
+          .sort((a, b) => b.pct - a.pct);
 
-          const classMap: Record<string, { total: number; count: number }> = {};
-          for (const s of students) {
-            const className = s.class?.name ?? "Unknown";
-            const progList: any[] = s.progress ?? [];
-            const avg = progList.length > 0
-              ? progList.reduce((sum: number, p: any) => sum + (p.totalScore ?? 0), 0) / progList.length
-              : 0;
-            if (!classMap[className]) classMap[className] = { total: 0, count: 0 };
-            classMap[className].total += avg;
-            classMap[className].count += 1;
-          }
-
-          const ranked: ClassRank[] = Object.entries(classMap)
-            .map(([name, { total, count }]) => ({
-              name,
-              pct: Math.round(count > 0 ? total / count : 0),
-            }))
-            .sort((a, b) => b.pct - a.pct);
-
-          setClasses(ranked);
-        }
-      } catch {}
-      finally { setLoading(false); }
+        setClasses(ranked);
+      }
+    } catch (err) {
+      console.error("Dashboard Fetch Error:", err); // Jangan dikosongkan agar terlacak jika ada error
+    } finally {
+      setLoading(false);
     }
-    load();
-  }, []);
+  }
+  load();
+}, []);
 
   // Penyesuaian stats warna agar konsisten dengan tema Green, Teal, Orange, Red
   const stats = [

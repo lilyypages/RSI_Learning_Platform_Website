@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
     const baseParentEmail  = emailOrtu.toLowerCase();
 
     const result = await db.$transaction(async (tx) => {
+      const principalUserId = session.userId;
       // Create parent user
       const parentUser = await tx.user.create({
         data: {
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
           role: "PARENT",
           name: namaOrtu,
           isActive: true,
+          createdBy: principalUserId,
         },
       });
 
@@ -80,6 +82,7 @@ export async function POST(req: NextRequest) {
           role: "STUDENT",
           name: namaSiswa,
           isActive: true,
+          createdBy: principalUserId,
         },
       });
 
