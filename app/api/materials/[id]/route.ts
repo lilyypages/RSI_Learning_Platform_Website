@@ -19,18 +19,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!material) return NextResponse.json({ error: "Materi tidak ditemukan" }, { status: 404 });
 
   return NextResponse.json({
-    success: true,
-    data: {
-      id: material.id,
-      title: material.title,
-      contentText: material.contentText,
-      difficulty: material.difficulty,
-      isPublished: material.isPublished,
-      orderIndex: material.orderIndex,
-      classSubject: material.classSubject,
-      videos: material.videos,
-      totalQuestions: material._count.questions,
-    },
+    id: material.id,
+    title: material.title,
+    contentText: material.contentText,
+    difficulty: material.difficulty,
+    isPublished: material.isPublished,
+    orderIndex: material.orderIndex,
+    classSubjectId: material.classSubjectId,
+    classSubject: material.classSubject,
+    videos: material.videos,
+    totalQuestions: material._count.questions,
+    questions: [], // client expects questions array
   });
 }
 

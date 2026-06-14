@@ -1,2 +1,0 @@
-=== 2. GET /api/auth/me ===
-Expecting value: line 1 column 1 (char 0)

@@ -15,14 +15,14 @@ export async function POST(req: NextRequest) {
 
   const quizSession = await db.quizSession.findFirst({
     where: { id: sessionId, studentId: student.id },
-    include: { answers: true },
+    include: { answers: { include: { question: { select: { questionText: true, options: true, correctAnswer: true } } } } },
   });
   if (!quizSession) return NextResponse.json({ error: "Sesi kuis tidak ditemukan" }, { status: 404 });
 
-  const totalQuestions = quizSession.answers.length;
+  const totalAnswered = quizSession.answers.length;
   const correctCount = quizSession.answers.filter((a) => a.isCorrect).length;
-  const wrongCount = totalQuestions - correctCount;
-  const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+  const wrongCount = totalAnswered - correctCount;
+  const score = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
 
   let resultLevel = "FAILED";
   if (score >= 90) resultLevel = "EXCELLENT";
@@ -82,20 +82,25 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  const review = quizSession.answers.map((a) => {
+    const opts = a.question.options as Record<string, string> | null;
+    return {
+      questionText: a.question.questionText,
+      options: opts ?? {},
+      userAnswer: a.answerGiven,
+      correctAnswer: a.question.correctAnswer,
+      correctValue: opts?.[a.question.correctAnswer] ?? "",
+      isCorrect: a.isCorrect,
+    };
+  });
+
   return NextResponse.json({
-    success: true,
-    data: {
-      score,
-      correctCount,
-      wrongCount,
-      resultLevel,
-      pointsEarned,
-      totalPoints: (student.totalPoints ?? 0) + pointsEarned,
-      review: quizSession.answers.map((a) => ({
-        questionId: a.questionId,
-        answerGiven: a.answerGiven,
-        isCorrect: a.isCorrect,
-      })),
-    },
+    score,
+    correctCount,
+    wrongCount,
+    totalAnswered,
+    resultLevel,
+    pointsEarned,
+    review,
   });
 }

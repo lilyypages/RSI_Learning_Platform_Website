@@ -47,8 +47,7 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({
-    success: true,
-    data: sessions.map((s) => ({
+    sessions: sessions.map((s) => ({
       id: s.id,
       materialTitle: s.material.title,
       studentName: s.student?.user?.name,

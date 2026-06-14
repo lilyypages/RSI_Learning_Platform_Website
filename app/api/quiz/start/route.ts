@@ -23,7 +23,10 @@ export async function POST(req: NextRequest) {
     where: { studentId: student.id, materialId, finishedAt: null },
   });
   if (existingSession) {
-    return NextResponse.json({ success: true, data: { sessionId: existingSession.id, isResume: true } });
+    return NextResponse.json({
+      sessionId: existingSession.id,
+      isResume: true,
+    });
   }
 
   const quizSession = await db.quizSession.create({
@@ -34,19 +37,31 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const firstQuestion = await db.question.findFirst({
+  let firstQuestion = await db.question.findFirst({
     where: { materialId, difficulty: "MEDIUM" },
     orderBy: { orderIndex: "asc" },
   });
+  if (!firstQuestion) {
+    firstQuestion = await db.question.findFirst({
+      where: { materialId, difficulty: "EASY" },
+      orderBy: { orderIndex: "asc" },
+    });
+  }
+  if (!firstQuestion) {
+    firstQuestion = await db.question.findFirst({
+      where: { materialId, difficulty: "HARD" },
+      orderBy: { orderIndex: "asc" },
+    });
+  }
+  if (!firstQuestion) {
+    return NextResponse.json({ error: "Belum ada soal untuk materi ini" }, { status: 404 });
+  }
 
   return NextResponse.json({
-    success: true,
-    data: {
-      sessionId: quizSession.id,
-      question: firstQuestion || null,
-      currentLevel: "MEDIUM",
-      lives: student.livesRemaining,
-      streak: 0,
-    },
+    sessionId: quizSession.id,
+    question: firstQuestion || null,
+    currentLevel: "MEDIUM",
+    lives: student.livesRemaining,
+    streak: 0,
   });
 }

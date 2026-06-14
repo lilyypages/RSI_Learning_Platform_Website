@@ -1,4 +1,0 @@
-=== negative: duplicate email teacher ===
-{
-    "error": "Email sudah terdaftar"
-}

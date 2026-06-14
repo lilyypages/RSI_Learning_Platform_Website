@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# junk
+cookies.txt
+test-screenshots/
+prisma/seed-local.ts

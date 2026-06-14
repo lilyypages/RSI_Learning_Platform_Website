@@ -1,5 +1,0 @@
-=== 16. GET /api/progress ===
-{
-    "success": true,
-    "data": []
-}

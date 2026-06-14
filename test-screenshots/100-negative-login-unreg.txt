@@ -1,5 +1,0 @@
-=== negative: login unregistered ===
-{
-    "success": false,
-    "message": "Email atau password salah"
-}

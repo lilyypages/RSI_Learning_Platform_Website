@@ -1,5 +1,0 @@
-=== 14. GET /api/quiz/sessions ===
-{
-    "success": true,
-    "data": []
-}

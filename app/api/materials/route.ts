@@ -23,21 +23,21 @@ export async function GET(req: NextRequest) {
     orderBy: { orderIndex: "asc" },
   });
 
-  return NextResponse.json({
-    success: true,
-    data: materials.map((m) => ({
+  return NextResponse.json(
+    materials.map((m) => ({
       id: m.id,
       title: m.title,
       contentText: m.contentText,
       difficulty: m.difficulty,
       isPublished: m.isPublished,
       orderIndex: m.orderIndex,
+      classSubjectId: m.classSubjectId,
       classSubject: m.classSubject,
       videos: m.videos,
       totalQuestions: m._count.questions,
       totalSessions: m._count.quizSessions,
     })),
-  });
+  );
 }
 
 export async function POST(req: NextRequest) {

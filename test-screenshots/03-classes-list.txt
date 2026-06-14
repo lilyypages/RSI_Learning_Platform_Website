@@ -1,5 +1,0 @@
-=== 4. GET /api/classes ===
-{
-    "success": true,
-    "data": []
-}

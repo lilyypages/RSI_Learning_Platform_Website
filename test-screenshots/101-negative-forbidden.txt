@@ -1,4 +1,0 @@
-=== negative: access teacher API with wrong role ===
-{
-    "error": "Forbidden: akses hanya untuk PRINCIPAL"
-}

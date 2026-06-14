@@ -66,16 +66,13 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    success: true,
-    data: {
-      isCorrect,
-      correctAnswer: question.correctAnswer,
-      streak: newStreak,
-      currentLevel,
-      livesRemaining,
-      finished: isFinished,
-      nextQuestion: isFinished ? null : nextQuestion,
-    },
+    isCorrect,
+    correctAnswer: question.correctAnswer,
+    streak: newStreak,
+    currentLevel,
+    done: isFinished,
+    nextQuestion: isFinished ? null : nextQuestion,
+    livesRemaining,
   });
 }
 

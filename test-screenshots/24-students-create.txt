@@ -1,4 +1,0 @@
-=== POST students create ===
-{
-    "error": "Nama, NIS, dan Kelas wajib diisi"
-}
