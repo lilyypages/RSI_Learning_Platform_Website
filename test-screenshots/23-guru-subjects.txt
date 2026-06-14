@@ -1,0 +1,5 @@
+=== teacher subjects ===
+{
+    "success": true,
+    "data": []
+}

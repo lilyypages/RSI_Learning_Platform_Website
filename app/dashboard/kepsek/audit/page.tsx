@@ -11,7 +11,7 @@ export default async function SecurityAudit() {
     db.teacher.count(),
     db.student.count(),
     db.parent.count(),
-    db.notification.findMany({
+    db.auditLog.findMany({
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
@@ -47,8 +47,8 @@ export default async function SecurityAudit() {
                     </div>
                     <div className="h-10 w-1 bg-slate-100 group-hover:bg-indigo-500 transition-colors rounded-full"></div>
                     <div>
-                      <p className="font-black text-slate-700 leading-none">{log.title}</p>
-                      <p className="text-xs text-slate-400 mt-1 font-medium">{log.body}</p>
+                      <p className="font-black text-slate-700 leading-none">{log.actionType}</p>
+                      <p className="text-xs text-slate-400 mt-1 font-medium">{JSON.stringify(log.metadata ?? '')}</p>
                     </div>
                   </div>
                   <UserPlus size={16} className="text-emerald-500" />

@@ -50,7 +50,28 @@ export default function ManajemenGuruRinci() {
     setDetail(null);
     const res = await fetch(`/api/teachers/${id}`);
     const data = await res.json();
-    if (data.success) setDetail(data.data);
+    if (data.success && data.data?.teacher) {
+      const t = data.data.teacher;
+      setDetail({
+        name: t.user?.name || "",
+        email: t.user?.email || "",
+        homeroom: t.homeroomClass?.[0]?.name || null,
+        subjects: (t.classSubjects || []).map((cs: any) => ({
+          subject: cs.subject?.name || "",
+          code: cs.subject?.code || "",
+          className: cs.class?.name || "",
+          avgCompletion: cs.studentProgress?.length > 0
+            ? Math.round(cs.studentProgress.reduce((s: number, sp: any) => s + (sp.completionPercent ?? 0), 0) / cs.studentProgress.length)
+            : 0,
+          students: (cs.studentProgress || []).map((sp: any) => ({
+            name: sp.student?.user?.name || "",
+            completionPercent: sp.completionPercent,
+            totalScore: sp.totalScore,
+            adaptiveLevel: sp.adaptiveLevel,
+          })),
+        })),
+      });
+    }
     setDetailLoading(false);
   };
 

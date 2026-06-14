@@ -1,0 +1,24 @@
+=== 17. GET /api/messages ===
+{
+    "success": true,
+    "data": [
+        {
+            "id": "5269f5aa-dc6e-41f3-a66b-2be4b6a5af77",
+            "content": "Test pesan dari kepsek",
+            "isRead": false,
+            "sentAt": "2026-06-14T06:09:50.792Z",
+            "sender": {
+                "id": "30246b46-0580-48a9-9659-f92493914123",
+                "name": "Kepsek Sekolah",
+                "email": "kepsek@rsi.sch.id",
+                "role": "PRINCIPAL"
+            },
+            "receiver": {
+                "id": "80c8e1b0-dd4a-4f69-8c9c-703f9ffe7ce9",
+                "name": "Siswa Contoh",
+                "email": "siswa@rsi.sch.id",
+                "role": "STUDENT"
+            }
+        }
+    ]
+}

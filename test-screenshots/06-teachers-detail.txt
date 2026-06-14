@@ -1,0 +1,26 @@
+=== 6. GET /api/teachers/cae9453f-948b-4e15-94bc-686a685ff8ce ===
+{
+    "success": true,
+    "data": {
+        "teacher": {
+            "id": "cae9453f-948b-4e15-94bc-686a685ff8ce",
+            "userId": "8cf280f2-8aea-400b-828c-7ecc424c7580",
+            "nip": "198505152010012002",
+            "phone": null,
+            "user": {
+                "id": "8cf280f2-8aea-400b-828c-7ecc424c7580",
+                "name": "Guru Matematika",
+                "email": "guru@rsi.sch.id",
+                "isActive": true,
+                "imageUrl": null
+            },
+            "homeroomClass": [],
+            "classSubjects": []
+        },
+        "stats": {
+            "totalSubjects": 0,
+            "totalClasses": 0,
+            "totalStudents": 0
+        }
+    }
+}

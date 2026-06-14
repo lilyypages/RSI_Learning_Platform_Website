@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { ChevronLeft, Plus, Brain, Trash2, Edit3, CheckCircle, HelpCircle, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -13,7 +13,7 @@ interface Question {
   orderIndex: number;
 }
 
-export default function KelolaSoalSederhana() {
+function KelolaSoalForm() {
   const searchParams = useSearchParams();
   const csId = searchParams.get("csId");
 
@@ -245,5 +245,13 @@ export default function KelolaSoalSederhana() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function KelolaSoalSederhana() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>}>
+      <KelolaSoalForm />
+    </Suspense>
   );
 }

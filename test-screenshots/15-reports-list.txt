@@ -1,0 +1,5 @@
+=== 15. GET /api/reports ===
+{
+    "success": true,
+    "data": []
+}

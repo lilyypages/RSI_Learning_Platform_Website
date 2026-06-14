@@ -1,0 +1,19 @@
+{
+    "success": true,
+    "data": [
+        {
+            "id": "cae9453f-948b-4e15-94bc-686a685ff8ce",
+            "userId": "8cf280f2-8aea-400b-828c-7ecc424c7580",
+            "name": "Guru Matematika",
+            "email": "guru@rsi.sch.id",
+            "nip": "198505152010012002",
+            "subjects": [],
+            "role": "Belum ada penugasan",
+            "status": "Aktif",
+            "totalSiswa": 0,
+            "ketuntasan": 0,
+            "tertinggal": 0,
+            "lastUpdate": "-"
+        }
+    ]
+}

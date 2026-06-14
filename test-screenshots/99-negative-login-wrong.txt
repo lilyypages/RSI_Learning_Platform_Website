@@ -1,0 +1,5 @@
+=== negative: login wrong password ===
+{
+    "success": false,
+    "message": "Email atau password salah"
+}

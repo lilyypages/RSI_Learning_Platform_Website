@@ -1,0 +1,17 @@
+=== teacher dashboard ===
+{
+    "success": true,
+    "data": {
+        "teacher": {
+            "name": "Guru Matematika",
+            "email": "guru@rsi.sch.id",
+            "homeroom": null
+        },
+        "classes": [],
+        "stats": {
+            "totalStudents": 0,
+            "avgCompletion": 0,
+            "studentsBehind": 0
+        }
+    }
+}

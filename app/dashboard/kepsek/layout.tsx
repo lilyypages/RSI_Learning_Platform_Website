@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Users, GraduationCap, ShieldCheck, LogOut } from "lucide-react";
 
@@ -16,46 +16,62 @@ export default function KepsekLayout({ children }: { children: React.ReactNode }
   ];
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      <aside className="w-72 bg-indigo-950 text-indigo-200 hidden md:flex flex-col fixed h-full shadow-2xl">
-        <div className="p-8 text-white border-b border-indigo-900/50">
-          <h1 className="font-black text-2xl tracking-tighter">SDN 01 SOLO</h1>
-          <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-[0.2em] mt-2">Super Admin Panel</p>
+    <div className="flex min-h-screen w-full bg-[#F4F9F4]">
+      
+      <aside 
+        className="bg-gradient-to-b from-[#2E7D32] to-[#004D40] text-[#E8F5E9] flex flex-col fixed top-0 bottom-0 left-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.1)] shrink-0"
+        style={{ width: "288px" }}
+      >
+        <div className="p-8 text-white border-b border-[#E8F5E9]/10 shrink-0">
+          <h1 className="font-black text-2xl tracking-tighter flex items-center gap-2">
+            🍃 <span className="bg-gradient-to-r from-[#FFFDE7] to-[#A5D6A7] bg-clip-text text-transparent">SDN 01 SOLO</span>
+          </h1>
+          <p className="text-[10px] text-[#A5D6A7] font-black uppercase tracking-[0.2em] mt-2">Executive Admin Panel</p>
         </div>
         
-        <nav className="flex-1 p-6 space-y-2">
+        <nav className="flex-1 p-6 flex flex-col gap-2 overflow-y-auto">
           {menuItems.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <Link 
+              <NextLink 
                 key={item.name} 
                 href={item.href}
-                className={`flex items-center space-x-3 p-4 rounded-2xl transition-all font-bold text-sm ${
+                className={`flex items-center gap-3 p-4 rounded-[24px] transition-all font-black text-sm shrink-0 w-full ${
                   isActive 
-                  ? "text-white bg-indigo-600 shadow-lg shadow-indigo-600/20" 
-                  : "hover:text-white hover:bg-white/5"
+                    ? "text-white bg-[#4CAF50] shadow-[0_8px_20px_rgba(76,175,80,0.3)]" 
+                    : "text-[#E8F5E9]/70 hover:text-white hover:bg-white/5"
                 }`}
               >
-                <item.icon size={20} />
+                <item.icon size={20} className="shrink-0" />
                 <span>{item.name}</span>
-              </Link>
+              </NextLink>
             );
           })}
         </nav>
 
-        <div className="p-8 border-t border-indigo-900/50">
-          <form action="/api/auth/logout" method="POST">
-            <button type="submit" className="flex items-center space-x-3 text-indigo-400 hover:text-rose-400 transition-colors text-sm font-bold group">
-              <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-              <span>Keluar Sistem</span>
-            </button>
-          </form>
+        <div className="p-8 border-t border-[#E8F5E9]/10 shrink-0">
+          <button
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              window.location.href = "/auth/login";
+            }}
+            className="flex items-center gap-3 text-[#A5D6A7] hover:text-[#E53935] transition-colors text-sm font-black group w-full text-left"
+          >
+            <LogOut size={18} className="group-hover:-translate-x-1 transition-transform shrink-0" />
+            <span>Keluar Sistem</span>
+          </button>
         </div>
       </aside>
 
-      <main className="flex-1 md:ml-72 p-10 min-h-screen">
-        {children}
-      </main>
+      <div 
+        className="flex-1 flex flex-col min-w-0 min-h-screen" 
+        style={{ marginLeft: "288px" }}
+      >
+        <main className="flex-1 p-6 md:p-10 w-full max-w-[1400px] mx-auto">
+          {children}
+        </main>
+      </div>
+
     </div>
   );
 }

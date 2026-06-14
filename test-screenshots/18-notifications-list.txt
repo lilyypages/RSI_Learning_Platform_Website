@@ -1,0 +1,6 @@
+=== 18. GET /api/notifications ===
+{
+    "success": true,
+    "data": [],
+    "unreadCount": 0
+}

@@ -1,76 +1,89 @@
 "use client";
-import React, { useState } from "react";
-import { Zap, Heart, Check, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Clock, Trophy, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-export default function QuizPagePreview() {
-  const [level] = useState("Mudah"); 
-  const [selected, setSelected] = useState<number | null>(null);
+export default function QuizHistoryPage() {
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const choices = [
-    "Cahaya Matahari & Air",
-    "Daging & Susu",
-    "Nasi & Gorengan",
-    "Es Krim"
-  ];
+  useEffect(() => {
+    fetch("/api/quiz/sessions")
+      .then(r => r.json())
+      .then(d => setSessions(d.sessions ?? []))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div className="max-w-3xl mx-auto py-20 text-center">
+      <Loader2 size={24} className="animate-spin text-[#4CAF50] mx-auto" />
+      <p className="text-slate-500 mt-3">Memuat riwayat...</p>
+    </div>
+  );
 
   return (
-    <div className="max-w-2xl mx-auto space-y-10 py-10 px-6">
-      <div className="flex justify-between items-center bg-white px-8 py-5 rounded-3xl shadow-sm border border-slate-100">
-        <div className="flex items-center space-x-2">
-          <div className="bg-amber-100 p-2 rounded-xl text-amber-600 shadow-inner">
-            <Zap size={20} fill="currentColor" />
-          </div>
-          <span className="font-black text-slate-700 tracking-tighter">LEVEL: {level}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-           {[1, 2, 3].map((h) => (
-             <Heart key={h} size={24} className={h <= 2 ? "text-red-500" : "text-slate-200"} fill="currentColor" />
-           ))}
-        </div>
-      </div>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <h1 className="text-2xl font-black text-[#2E7D32]">Riwayat Quiz</h1>
 
-      <div className="text-center space-y-8">
-        <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-           <div className="bg-indigo-500 h-full w-1/3 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(99,102,241,0.6)]"></div>
-        </div>
-        <h2 className="text-3xl font-black text-slate-800 leading-tight px-4">
-          Apa yang dibutuhkan tumbuhan untuk melakukan fotosintesis?
-        </h2>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        {choices.map((choice, i) => (
-          <button 
-            key={i} 
-            onClick={() => setSelected(i)}
-            className={`group p-6 rounded-[28px] text-left font-bold text-lg transition-all flex justify-between items-center border-4
-              ${selected === i 
-                ? 'border-indigo-500 bg-indigo-50 text-indigo-700' 
-                : 'border-white bg-white text-slate-600 hover:border-slate-100 shadow-sm'}
-            `}
+      {sessions.length === 0 ? (
+        <div className="bg-white rounded-[24px] border-2 border-dashed border-slate-200 p-12 text-center">
+          <Trophy size={40} className="mx-auto mb-3 text-slate-300" />
+          <p className="font-medium text-slate-500">Belum ada quiz yang dikerjakan.</p>
+          <Link
+            href="/dashboard/siswa/mapel"
+            className="inline-block mt-4 px-6 py-3 bg-[#4CAF50] text-white rounded-2xl font-bold hover:bg-[#2E7D32] transition-all"
           >
-            <span>{choice}</span>
-            <div className={`w-8 h-8 rounded-full border-4 flex items-center justify-center
-              ${selected === i ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-100'}
-            `}>
-                {selected === i && <Check size={16} strokeWidth={4} />}
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-4">
-        <button 
-            disabled={selected === null}
-            className="w-full py-6 bg-slate-900 text-white rounded-[32px] font-black text-xl shadow-2xl hover:bg-slate-800 disabled:opacity-20 active:scale-95 transition-all"
-        >
-            Periksa Jawaban
-        </button>
-        <Link href="/dashboard/siswa/mapel" className="block text-center text-slate-400 font-bold text-sm hover:underline">
-            Nanti saja, aku mau belajar lagi
-        </Link>
-      </div>
+            Mulai Belajar
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {sessions.map((s: any) => {
+            const isPassed = s.resultLevel === "PASSED" || s.resultLevel === "EXCELLENT";
+            return (
+              <div
+                key={s.id}
+                className="bg-white rounded-[24px] border border-slate-100 p-5 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center gap-4">
+                  {isPassed ? (
+                    <CheckCircle2 size={22} className="text-green-500 shrink-0" />
+                  ) : (
+                    <AlertCircle size={22} className="text-rose-500 shrink-0" />
+                  )}
+                  <div>
+                    <p className="font-bold text-slate-800">{s.materialTitle}</p>
+                    <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                      <Clock size={12} />
+                      {s.finishedAt
+                        ? new Date(s.finishedAt).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-black text-slate-800">{s.score}%</p>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      s.resultLevel === "EXCELLENT"
+                        ? "bg-purple-100 text-purple-700"
+                        : isPassed
+                        ? "bg-green-100 text-green-700"
+                        : "bg-rose-100 text-rose-700"
+                    }`}
+                  >
+                    {s.resultLevel ?? "-"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

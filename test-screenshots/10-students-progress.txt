@@ -1,0 +1,16 @@
+=== 10. GET /api/students/42f80b33-19e6-4e05-9226-2568bdf022e4/progress ===
+{
+    "success": true,
+    "student": {
+        "name": "Siswa Contoh",
+        "email": "siswa@rsi.sch.id",
+        "nis": "1234567890",
+        "totalPoints": 0
+    },
+    "subjectProgress": [],
+    "allQuizSessions": [],
+    "videoStats": {
+        "completedCount": 0,
+        "totalWatched": 0
+    }
+}

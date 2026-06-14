@@ -1,0 +1,3 @@
+=== negative: no auth ===
+HTTP Status: 307
+Redirect: http://localhost:3001/auth/login?callbackUrl=%2Fapi%2Fteachers

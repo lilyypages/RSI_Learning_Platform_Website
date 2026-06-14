@@ -1,10 +1,10 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { ChevronLeft, Save, Video, FileText, Plus, Trash2, Globe, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function InputMateriSederhana() {
+function InputMateriForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const csId = searchParams.get("csId");
@@ -151,5 +151,13 @@ export default function InputMateriSederhana() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function InputMateriSederhana() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>}>
+      <InputMateriForm />
+    </Suspense>
   );
 }

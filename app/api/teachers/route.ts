@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       totalSiswa,
       ketuntasan: avgKetuntasan,
       tertinggal,
-      lastUpdate: t.classSubjects[0]?.materials?.[0] ? `Materi ${t.classSubjects[0].subject.name}` : "-",
+      lastUpdate: (t.classSubjects[0]?._count?.materials ?? 0) > 0 ? `Materi ${t.classSubjects[0].subject.name}` : "-",
     };
   });
 

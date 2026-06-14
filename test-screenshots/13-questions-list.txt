@@ -1,0 +1,4 @@
+=== 13. GET /api/questions ===
+{
+    "error": "materialId diperlukan"
+}

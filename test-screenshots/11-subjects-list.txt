@@ -1,0 +1,5 @@
+=== 11. GET /api/subjects ===
+{
+    "success": true,
+    "data": []
+}
