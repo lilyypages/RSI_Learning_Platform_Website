@@ -1,4 +1,3 @@
-// app/api/reports/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -34,6 +33,8 @@ export async function GET(req: NextRequest) {
       reports = await db.weeklyReport.findMany({
         where:   { studentId: { in: studentIds } },
         include: {
+          // 🌟 Dashboard Ortu: Kita sertakan info nama anak & mata pelajaran agar transparan
+          student:      { include: { user: { select: { name: true } } } },
           classSubject: { include: { subject: { select: { name: true } } } },
         },
         orderBy: { generatedAt: "desc" },
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/reports = generate & send weekly report (TEACHER only)
+// POST /api/reports = Mengirim laporan mingguan kustom per siswa
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
@@ -58,62 +59,61 @@ export async function POST(req: NextRequest) {
     }
 
     const teacher = await db.teacher.findUnique({
-      where:   { userId: session.userId },
-      include: { homeroomClass: { include: { students: true } } },
+      where: { userId: session.userId },
     });
 
     if (!teacher) {
       return NextResponse.json({ success: false, message: "Data guru tidak ditemukan" }, { status: 404 });
     }
 
+    // 🌟 1. Ambil payload kustom yang dikirim dari form LaporanMingguan
     const body = await req.json();
-    const { classSubjectId, catatanKelas } = body;
+    const { classSubjectId, catatanKelas, laporanSiswa } = body; 
+    // laporanSiswa berbentuk: [{ studentId: "...", catatanIndividu: "..." }, ...]
 
-    // Get all students in homeroom class
-    const allStudents = teacher.homeroomClass.flatMap((c) => c.students);
-    if (allStudents.length === 0) {
+    if (!laporanSiswa || !Array.isArray(laporanSiswa) || laporanSiswa.length === 0) {
       return NextResponse.json(
-        { success: false, message: "Tidak ada siswa di kelas ini" },
+        { success: false, message: "Data catatan siswa tidak valid atau kosong" },
         { status: 400 }
       );
     }
 
     const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // start of week
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Ambil hari Minggu pekan ini
 
-    // Create report for each student
-    const reports = await db.$transaction(
-      allStudents.map((student) =>
-        db.weeklyReport.upsert({
-          where: {
-            // use a composite approach — create or update for this week
-            id: "00000000-0000-0000-0000-000000000000", // will not match, forces create
-          },
-          update: {},
-          create: {
-            studentId:      student.id,
+    // 🌟 2. Jalankan transaksi bulk database berdasarkan input kustom dari komponen guru
+    await db.$transaction(
+      laporanSiswa.map((item) => {
+        // Gabungkan catatan umum kelas dengan catatan privat anak agar ortu membaca keduanya
+        const gabunganCatatan = item.catatanIndividu 
+          ? `[Catatan Kelas]: ${catatanKelas || "-"}\n[Catatan Khusus]: ${item.catatanIndividu}`
+          : `[Catatan Kelas]: ${catatanKelas || "-"}`;
+
+        return db.weeklyReport.create({
+          data: {
+            studentId:      item.studentId,
             classSubjectId: classSubjectId,
             teacherId:      teacher.id,
             weekStart:      weekStart,
-            avgScore:       0,
+            avgScore:       0, // Nanti bisa di-update via cronjob otomatis atau disinkronkan langsung
             completionRate: 0,
-            recommendation: catatanKelas ?? null,
+            recommendation: gabunganCatatan, // 🌟 Masuk ke dashboard ortu secara personal!
             kkm_achieved:   false,
           },
-        })
-      )
+        });
+      })
     );
 
     return NextResponse.json(
       {
         success: true,
-        message: `Laporan berhasil dikirim ke ${allStudents.length} orang tua`,
-        count:   allStudents.length,
+        message: `Laporan individu berhasil didistribusikan ke ${laporanSiswa.length} dashboard orang tua.`,
+        count:   laporanSiswa.length,
       },
       { status: 201 }
     );
   } catch (error) {
     console.error("[REPORTS_POST]", error);
-    return NextResponse.json({ success: false, message: "Gagal mengirim laporan" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Gagal memproses laporan kustom" }, { status: 500 });
   }
 }
