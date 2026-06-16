@@ -26,7 +26,7 @@ export default function KepsekLayout({ children }: { children: React.ReactNode }
         {/* Header Sidebar */}
         <div className="p-8 text-white border-b border-[#E8F5E9]/10 shrink-0">
           <h1 className="font-black text-2xl tracking-tighter flex items-center gap-2">
-            🍃 <span className="bg-gradient-to-r from-[#FFFDE7] to-[#A5D6A7] bg-clip-text text-transparent">SDN 01 SOLO</span>
+            🍃 <span className="bg-gradient-to-r from-[#FFFDE7] to-[#A5D6A7] bg-clip-text text-transparent">SIPANDA</span>
           </h1>
           <p className="text-[10px] text-[#A5D6A7] font-black uppercase tracking-[0.2em] mt-2">Executive Admin Panel</p>
         </div>

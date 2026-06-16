@@ -177,7 +177,7 @@ export default function KepsekDashboard() {
           <div>
             <h3 className="font-black text-[#2E7D32] text-xl mb-3">Log Keamanan Sistem</h3>
             <p className="text-sm text-[#2E7D32]/60 leading-relaxed max-w-md font-medium">
-              Pantau seluruh aktivitas mutasi data database, riwayat login, serta eksekusi sistem demi menjaga integritas data akademik SDN 01 Solo.
+              Pantau seluruh aktivitas mutasi data database, riwayat login, serta eksekusi sistem demi menjaga integritas data akademik SIPANDA.
             </p>
           </div>
           <div className="mt-auto">
