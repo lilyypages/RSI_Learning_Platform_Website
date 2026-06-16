@@ -25,6 +25,7 @@ export default async function SiswaLayout({
       currentStreak: true,
       livesRemaining: true,
       totalPoints: true,
+      class: { select: { name: true } },
       user: {
         select: { name: true, imageUrl: true },
       },
@@ -89,7 +90,7 @@ export default async function SiswaLayout({
               <p className="text-sm font-bold text-[#2E7D32] truncate">
                 {student.user.name}
               </p>
-              <p className="text-[11px] text-[#2E7D32]/60">Siswa</p>
+              <p className="text-[11px] text-[#2E7D32]/60">Siswa{student.class?.name ? ` • Kelas ${student.class.name}` : ""}</p>
             </div>
           </div>
 

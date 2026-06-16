@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Clock, Trophy, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Clock, Trophy, CheckCircle2, AlertCircle, Loader2, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 export default function QuizHistoryPage() {
@@ -53,6 +53,11 @@ export default function QuizHistoryPage() {
                   )}
                   <div>
                     <p className="font-bold text-slate-800">{s.materialTitle}</p>
+                    {s.subjectName && (
+                      <p className="text-[11px] text-[#4CAF50] font-semibold mt-0.5 flex items-center gap-1">
+                        <BookOpen size={11} /> {s.subjectName}
+                      </p>
+                    )}
                     <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                       <Clock size={12} />
                       {s.finishedAt

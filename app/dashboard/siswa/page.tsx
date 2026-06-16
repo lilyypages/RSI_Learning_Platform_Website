@@ -52,6 +52,7 @@ export default async function SiswaDashboardPage() {
       totalPoints: true,
       currentStreak: true,
       livesRemaining: true,
+      class: { select: { name: true } },
       user: { select: { name: true } },
 
       // Progress per mapel
@@ -126,6 +127,11 @@ export default async function SiswaDashboardPage() {
           <h1 className="text-2xl font-black mb-1.5">
             Semangat Belajar, {firstName}! 👋
           </h1>
+          {student.class?.name && (
+            <p className="text-sm font-bold text-[#A5D6A7] mb-1">
+              🏫 Kelas {student.class.name}
+            </p>
+          )}
           <p className="text-[#A5D6A7] text-sm max-w-md leading-relaxed">
             {(student.currentStreak ?? 0) >= 3
               ? `Streak ${student.currentStreak ?? 0} hari! Terus pertahankan ya.`
