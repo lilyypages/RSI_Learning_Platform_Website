@@ -25,6 +25,7 @@ interface TeachingSubject {
 }
 
 interface TeacherProfile {
+  id: string;
   success: boolean;
   name: string;
   role: string;
@@ -90,6 +91,11 @@ export default function GuruProfilePage() {
   // Handle submit update akun mandiri
   const handleUpdateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    // VALIDASI KRITIS
+  if (!profile || !profile.id) {
+    setFormMessage({ type: "error", text: "Data profil belum termuat, harap tunggu sebentar." });
+    return;
+  }
     setSubmitLoading(true);
     setFormMessage(null);
 
@@ -101,6 +107,7 @@ export default function GuruProfilePage() {
 
     try {
       const formData = new FormData();
+      if (profile?.id) {formData.append("userId", profile.id);}
       if (selectedFile) formData.append("image", selectedFile);
       if (passwordForm.oldPassword) {
         formData.append("oldPassword", passwordForm.oldPassword);
