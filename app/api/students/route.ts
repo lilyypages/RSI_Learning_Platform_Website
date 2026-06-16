@@ -224,7 +224,6 @@ export async function POST(req: NextRequest) {
           name: parentName.trim(),
           role: "PARENT",
           isActive: true,
-          mustChangePassword: true, // 🌟 Menambahkan flag ganti password awal
           createdBy: session.userId,
         },
       });
@@ -247,7 +246,6 @@ export async function POST(req: NextRequest) {
           role: "STUDENT",
           imageUrl: imageUrl || null,
           isActive: true,
-          mustChangePassword: true, // 🌟 Menambahkan flag ganti password awal
           createdBy: session.userId,
         },
       });

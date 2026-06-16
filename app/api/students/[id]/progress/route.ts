@@ -8,12 +8,47 @@ export async function GET(
 ) {
   try {
     const session = await getSessionFromRequest(req);
-    const guard = requireRole(session, "PRINCIPAL");
-    if (!guard.ok) return NextResponse.json({ error: guard.error }, { status: guard.status });
-
     const { id } = await params;
+    const role = session?.role;
 
-    // 1. Ambil data dasar siswa & kelas
+    // --- 🛡️ AUTENTIKASI & VALIDASI ---
+    if (role === "PRINCIPAL") {
+      const guard = requireRole(session, "PRINCIPAL");
+      if (!guard.ok) return NextResponse.json({ error: guard.error }, { status: guard.status });
+    } 
+    else if (role === "TEACHER") {
+      // 1. Cari Profil Guru berdasarkan userId dari session
+      const teacherProfile = await db.teacher.findUnique({
+        where: { userId: (session as any)?.userId }
+      });
+
+      if (!teacherProfile) {
+        return NextResponse.json({ success: false, message: "Profil guru tidak ditemukan" }, { status: 404 });
+      }
+
+      // 2. Cari kelas siswa
+      const studentWithClass = await db.student.findUnique({
+        where: { id },
+        select: { class: { select: { id: true } } }
+      });
+
+      // 3. Validasi apakah guru tersebut mengajar kelas siswa ini
+      const isTeaching = await db.classSubject.findFirst({
+        where: { 
+          classId: studentWithClass?.class?.id, 
+          teacherId: teacherProfile.id 
+        }
+      });
+
+      if (!isTeaching) {
+        return NextResponse.json({ success: false, message: "Akses dilarang. Siswa ini bukan bagian dari kelas bimbingan Anda." }, { status: 403 });
+      }
+    } 
+    else {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 });
+    }
+
+    // --- 📊 QUERY DATA UTAMA ---
     const student = await db.student.findUnique({
       where: { id },
       select: {
@@ -28,58 +63,48 @@ export async function GET(
       return NextResponse.json({ success: false, message: "Siswa tidak ditemukan" }, { status: 404 });
     }
 
-    // 2. Ambil seluruh data progress mata pelajaran secara detail
-    const subjectProgress = await db.studentProgress.findMany({
-      where: { studentId: id },
-      select: {
-        id: true,
-        completionPercent: true,
-        totalScore: true,
-        adaptiveLevel: true,
-        lastActivity: true,
-        classSubject: {
-          select: {
-            subject: {
-              select: { id: true, name: true, code: true }
-            }
+    const [subjectProgress, allQuizSessions, videoWatches] = await Promise.all([
+      db.studentProgress.findMany({
+        where: { studentId: id },
+        select: {
+          id: true,
+          completionPercent: true,
+          totalScore: true,
+          adaptiveLevel: true,
+          lastActivity: true,
+          classSubject: {
+            select: { subject: { select: { id: true, name: true, code: true } } }
           }
-        }
-      },
-      orderBy: { lastActivity: "desc" }
-    });
-
-    // 3. Ambil seluruh riwayat pengerjaan kuis siswa (tanpa batasan take: 5)
-    const allQuizSessions = await db.quizSession.findMany({
-      where: { studentId: id },
-      select: {
-        id: true,
-        score: true,
-        correctCount: true,
-        wrongCount: true,
-        resultLevel: true,
-        startedAt: true,
-        finishedAt: true,
-        classSubject: {
-          select: {
-            subject: { select: { name: true } }
+        },
+        orderBy: { lastActivity: "desc" }
+      }),
+      db.quizSession.findMany({
+        where: { studentId: id },
+        select: {
+          id: true,
+          score: true,
+          correctCount: true,
+          wrongCount: true,
+          resultLevel: true,
+          startedAt: true,
+          finishedAt: true,
+          classSubject: {
+            select: { subject: { select: { name: true } } }
           }
-        }
-      },
-      orderBy: { startedAt: "desc" }
-    });
-
-    // 4. Ambil statistik tontonan video materi
-    const videoWatches = await db.videoWatch.findMany({
-      where: { studentId: id },
-      select: {
-        id: true,
-        isCompleted: true,
-        watchedSeconds: true,
-        watchedAt: true,
-        // Menyesuaikan jika model videoWatch kamu terikat ke materi/subject
-      },
-      orderBy: { watchedAt: "desc" }
-    });
+        },
+        orderBy: { startedAt: "desc" }
+      }),
+      db.videoWatch.findMany({
+        where: { studentId: id },
+        select: {
+          id: true,
+          isCompleted: true,
+          watchedSeconds: true,
+          watchedAt: true,
+        },
+        orderBy: { watchedAt: "desc" }
+      })
+    ]);
 
     return NextResponse.json({
       success: true,
