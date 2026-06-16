@@ -1,20 +1,48 @@
 "use client";
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { ChevronLeft, Save, Video, FileText, Plus, Trash2, Globe, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 function InputMateriForm() {
-  const searchParams   = useSearchParams();
+  const searchParams = useSearchParams();
   const classSubjectId = searchParams.get("classSubjectId") ?? "";
+  const materialId = searchParams.get("materialId") ?? ""; // 🌟 Mengambil ID Bab spesifik
 
-  const [title, setTitle]           = useState("");
-  const [embedUrl, setEmbedUrl]     = useState("");
+  const [title, setTitle] = useState("");
+  const [embedUrl, setEmbedUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
   const [poinMateri, setPoinMateri] = useState<string[]>([""]);
-  const [saving, setSaving]         = useState(false);
-  const [saved, setSaved]           = useState(false);
-  const [error, setError]           = useState("");
+  
+  const [loadingData, setLoadingData] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  // 🌟 Auto-fetch data bab yang sudah ada agar guru bisa melanjutkan pengisian data
+  useEffect(() => {
+    if (!materialId) return;
+    setLoadingData(true);
+    fetch(`/api/materials?classSubjectId=${classSubjectId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data.materials || [];
+        const currentBab = list.find((m: any) => m.id === materialId);
+        
+        if (currentBab) {
+          setTitle(currentBab.title);
+          if (currentBab.contentText) {
+            setPoinMateri(currentBab.contentText.split("\n"));
+          }
+          if (currentBab.videos && currentBab.videos.length > 0) {
+            setEmbedUrl(currentBab.videos[0].embedUrl || "");
+            setVideoTitle(currentBab.videos[0].title || "");
+          }
+        }
+      })
+      .catch((err) => console.error("Gagal mengambil detail Bab:", err))
+      .finally(() => setLoadingData(false));
+  }, [materialId, classSubjectId]);
 
   function updatePoin(i: number, val: string) {
     setPoinMateri(prev => prev.map((p, idx) => idx === i ? val : p));
@@ -23,75 +51,86 @@ function InputMateriForm() {
     setPoinMateri(prev => prev.filter((_, idx) => idx !== i));
   }
 
-  async function handleSave() {
-    setError("");
-    if (!title.trim()) { setError("Judul materi wajib diisi."); return; }
-    if (!classSubjectId) { setError("classSubjectId tidak ditemukan. Kembali ke halaman Mapel."); return; }
+async function handleSave() {
+  setError("");
+  setSaved(false);
+  if (!title.trim()) { setError("Judul materi wajib diisi."); return; }
+  if (!materialId) { setError("ID Bab tidak ditemukan."); return; } // 🌟 Validasi penting
 
-    const contentText = poinMateri.filter(p => p.trim()).join("\n");
+  const contentText = poinMateri.filter(p => p.trim()).join("\n");
 
-    setSaving(true);
-    try {
-      const res = await fetch("/api/materials", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          classSubjectId,
-          title:       title.trim(),
-          contentText: contentText || null,
-          embedUrl:    embedUrl.trim() || undefined,
-          videoTitle:  videoTitle.trim() || title.trim(),
-          difficulty:  "MEDIUM",
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSaved(true);
-        setTitle(""); setEmbedUrl(""); setVideoTitle(""); setPoinMateri([""]);
-      } else {
-        setError(data.message ?? "Gagal menyimpan materi.");
-      }
-    } catch {
-      setError("Koneksi gagal. Coba lagi.");
-    } finally {
-      setSaving(false);
+  setSaving(true);
+  try {
+    const res = await fetch("/api/materials", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        classSubjectId,
+        materialId, // 🌟 PASTIKAN INI IKUT DIKIRIM KE BACKEND!
+        title: title.trim(),
+        contentText: contentText || null,
+        embedUrl: embedUrl.trim() || undefined,
+        videoTitle: videoTitle.trim() || title.trim(),
+        difficulty: "MEDIUM",
+      }),
+    });
+    
+    const data = await res.json();
+    if (res.ok && data.success) {
+      setSaved(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setError(data.message ?? "Gagal menyimpan detail materi.");
     }
+  } catch {
+    setError("Koneksi gagal. Coba lagi.");
+  } finally {
+    setSaving(false);
+  }
+}
+
+  if (loadingData) {
+    return (
+      <div className="flex flex-col h-64 items-center justify-center text-[#2E7D32] font-bold gap-2">
+        <Loader2 className="animate-spin text-[#4CAF50]" />
+        <span>Memuat data detail modul bab...</span>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      {/* Mengubah warna teks kembali ke tema hijau tua */}
-      <Link href="/dashboard/guru/mapel" className="flex items-center text-[#2E7D32]/70 font-bold text-sm hover:text-[#2E7D32] w-fit transition-colors">
-        <ChevronLeft size={18} /> Kembali ke Daftar Mapel
+      <Link 
+        href={`/dashboard/guru/mapel/kelola-materi?classSubjectId=${classSubjectId}`} 
+        className="flex items-center text-[#2E7D32]/70 font-bold text-sm hover:text-[#2E7D32] w-fit transition-colors"
+      >
+        <ChevronLeft size={18} /> Kembali ke Daftar Bab
       </Link>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.05)]">
         <div>
-          <h1 className="text-2xl font-black text-[#2E7D32]">Input Materi Baru 📝</h1>
+          <h1 className="text-2xl font-black text-[#2E7D32]">Kelola Konten Materi 📝</h1>
           <p className="text-[#2E7D32]/60 text-sm font-medium">
-            {classSubjectId ? `Class Subject ID: ${classSubjectId.slice(0,8)}...` : "Pilih mata pelajaran terlebih dahulu"}
+            Lengkapi media pengajaran interaktif untuk Bab ini.
           </p>
         </div>
-        {/* Tombol Simpan menggunakan warna hijau --green (#4CAF50) */}
         <button
           onClick={handleSave}
           disabled={saving}
           className="bg-[#4CAF50] hover:bg-[#2E7D32] disabled:opacity-60 text-white px-8 py-3 rounded-[24px] font-black flex items-center space-x-2 shadow-[0_8px_32px_rgba(76,175,80,0.15)] transition-all"
         >
           <Save size={18} />
-          <span>{saving ? "Menyimpan..." : "Simpan ke Siswa"}</span>
+          <span>{saving ? "Menyimpan..." : "Simpan Perubahan"}</span>
         </button>
       </div>
 
-      {/* Notifikasi Sukses menggunakan basis warna hijau alami */}
       {saved && (
         <div className="flex items-center space-x-3 p-4 bg-[#E8F5E9] border border-[#A5D6A7] rounded-[24px] text-[#2E7D32] font-bold">
           <CheckCircle2 size={20} />
-          <span>Materi berhasil disimpan!</span>
+          <span>Konten bab berhasil disinkronisasi ke siswa!</span>
         </div>
       )}
       
-      {/* Notifikasi Gagal menggunakan basis warna merah */}
       {error && (
         <div className="p-4 bg-[#FFEBEE] border border-[#FFCDD2] rounded-[24px] text-[#E53935] font-bold text-sm">
           {error}
@@ -100,7 +139,7 @@ function InputMateriForm() {
 
       <div className="grid grid-cols-1 gap-6">
         {/* Bagian Judul */}
-        <div className="bg-white p-8 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.1)] space-y-4">
+        <div className="bg-white p-8 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.05)] space-y-4">
           <label className="block text-xs font-black text-[#2E7D32]/50 uppercase tracking-widest">Judul Bab / Materi *</label>
           <input
             type="text"
@@ -111,8 +150,8 @@ function InputMateriForm() {
           />
         </div>
 
-        {/* Bagian Video menggunakan basis aksen Oranye / Red hangat */}
-        <div className="bg-white p-8 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.1)] space-y-4">
+        {/* Bagian Video */}
+        <div className="bg-white p-8 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.05)] space-y-4">
           <div className="flex items-center space-x-2 text-[#FF8F00] font-black uppercase tracking-widest text-xs">
             <Video size={18} />
             <span>Link Video Penjelasan (Opsional)</span>
@@ -121,7 +160,7 @@ function InputMateriForm() {
             type="text"
             value={videoTitle}
             onChange={e => setVideoTitle(e.target.value)}
-            placeholder="Judul video (opsional)"
+            placeholder="Judul video penunjang"
             className="w-full p-4 bg-[#FFFBF0] border border-[#E8F5E9] rounded-[24px] outline-none focus:ring-2 focus:ring-[#FF8F00]/50 font-medium text-[#2E7D32] placeholder-[#2E7D32]/30"
           />
           <div className="relative">
@@ -134,19 +173,17 @@ function InputMateriForm() {
               className="w-full p-4 pl-12 bg-[#FFFBF0] border border-[#E8F5E9] rounded-[24px] outline-none focus:ring-2 focus:ring-[#FF8F00] font-medium text-[#2E7D32] placeholder-[#2E7D32]/30"
             />
           </div>
-          <p className="text-xs text-[#2E7D32]/40 italic">*Hanya URL YouTube yang valid diterima.</p>
         </div>
 
-        {/* Bagian Poin Materi menggunakan basis aksen Teal / Hijau */}
-        <div className="bg-white p-8 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.1)] space-y-6">
+        {/* Bagian Poin Materi */}
+        <div className="bg-white p-8 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.05)] space-y-6">
           <div className="flex items-center space-x-2 text-[#00897B] font-black uppercase tracking-widest text-xs">
             <FileText size={18} />
-            <span>Poin-Poin Penting</span>
+            <span>Rangkuman Materi Utama</span>
           </div>
           <div className="space-y-4">
             {poinMateri.map((poin, i) => (
               <div key={i} className="flex items-center space-x-3">
-                {/* Badge Angka */}
                 <div className="w-8 h-8 bg-[#E0F2F1] text-[#00897B] rounded-full flex items-center justify-center font-black text-xs flex-shrink-0">
                   {i + 1}
                 </div>
@@ -154,22 +191,20 @@ function InputMateriForm() {
                   type="text"
                   value={poin}
                   onChange={e => updatePoin(i, e.target.value)}
-                  placeholder={`Poin ke-${i + 1}...`}
+                  placeholder={`Masukkan materi paragraf ke-${i + 1}...`}
                   className="flex-1 p-4 bg-[#FFFBF0] border border-[#E8F5E9] rounded-[24px] outline-none focus:ring-2 focus:ring-[#00897B] font-medium text-[#2E7D32] placeholder-[#2E7D32]/30"
                 />
-                {/* Tombol Hapus Baris */}
                 <button onClick={() => removePoin(i)} className="p-2 text-[#2E7D32]/30 hover:text-[#E53935] transition-colors">
                   <Trash2 size={20} />
                 </button>
               </div>
             ))}
-            {/* Tombol Tambah Baris */}
             <button
               onClick={() => setPoinMateri(p => [...p, ""])}
               className="w-full py-4 border-2 border-dashed border-[#E8F5E9] rounded-[24px] text-[#2E7D32]/40 font-bold hover:border-[#4CAF50] hover:text-[#2E7D32] transition-all flex items-center justify-center space-x-2"
             >
               <Plus size={18} />
-              <span>Tambah Baris Materi</span>
+              <span>Tambah Baris Materi Baru</span>
             </button>
           </div>
         </div>

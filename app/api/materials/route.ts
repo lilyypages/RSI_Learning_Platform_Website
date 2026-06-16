@@ -38,63 +38,98 @@ export async function GET(req: NextRequest) {
   }
 }
 // POST /api/materials — create new material (TEACHER only)
+// app/api/materials/route.ts
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "TEACHER") {
       return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
     }
+
     const body = await req.json();
-    const { classSubjectId, title, contentText, orderIndex, difficulty, embedUrl, videoTitle } = body;
+    // 🌟 Ambil materialId dari body data yang dikirim frontend
+    const { classSubjectId, materialId, title, contentText, orderIndex, difficulty, embedUrl, videoTitle } = body;
     
-    // Validate required fields
     if (!classSubjectId || !title) {
       return NextResponse.json(
         { success: false, message: "classSubjectId dan title wajib diisi" },
         { status: 400 }
       );
     }
-    // Validate YouTube URL if provided
+
     if (embedUrl) {
       const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
       if (!youtubeRegex.test(embedUrl)) {
-        return NextResponse.json(
-          { success: false, message: "Masukkan URL YouTube yang valid" },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, message: "Masukkan URL YouTube yang valid" }, { status: 400 });
       }
     }
-    // Create material + optional video in one transaction
+
+    // Jalankan transaksi DB
     const material = await db.$transaction(async (tx) => {
-      const newMaterial = await tx.material.create({
-        data: {
-          classSubjectId,
-          title,
-          contentText:  contentText ?? null,
-          orderIndex:   orderIndex  ?? 0,
-          difficulty:   difficulty  ?? "MEDIUM",
-          isPublished:  true,
-        },
-      });
-      if (embedUrl && videoTitle) {
-        await tx.video.create({
+      let currentMaterial;
+
+      // 🌟 JIKA MATERIAL_ID ADA: Lakukan UPDATE konten bab yang sudah ada
+      if (materialId) {
+        currentMaterial = await tx.material.update({
+          where: { id: materialId },
           data: {
-            materialId:      newMaterial.id,
-            title:           videoTitle,
-            embedUrl,
-            durationSeconds: 0,
-            pointReward:     10,
+            title,
+            contentText: contentText ?? null,
+            difficulty: difficulty ?? "MEDIUM",
           },
         });
+
+        // Urus relasi video (Hapus dulu yang lama, lalu buat baru jika ada input video baru)
+        if (embedUrl && videoTitle) {
+          await tx.video.deleteMany({ where: { materialId } });
+          await tx.video.create({
+            data: {
+              materialId,
+              title: videoTitle,
+              embedUrl,
+              durationSeconds: 0,
+              pointReward: 10,
+            },
+          });
+        }
+      } 
+      // 🌟 JIKA MATERIAL_ID TIDAK ADA: Jalankan fungsi bawaanmu (Bikin Bab Baru Kosong)
+      else {
+        currentMaterial = await tx.material.create({
+          data: {
+            classSubjectId,
+            title,
+            contentText: contentText ?? null,
+            orderIndex: orderIndex ?? 0,
+            difficulty: difficulty ?? "MEDIUM",
+            isPublished: true,
+          },
+        });
+
+        if (embedUrl && videoTitle) {
+          await tx.video.create({
+            data: {
+              materialId: currentMaterial.id,
+              title: videoTitle,
+              embedUrl,
+              durationSeconds: 0,
+              pointReward: 10,
+            },
+          });
+        }
       }
-      return newMaterial;
+
+      return currentMaterial;
     });
+
     return NextResponse.json(
-      { success: true, message: "Materi berhasil disimpan", material },
-      { status: 201 }
+      { success: true, message: "Materi berhasil disinkronisasi", material },
+      { status: 200 }
     );
+
   } catch (error) {
-    console.error("[MATERIALS_POST]", error);
+    console.error("[MATERIALS_POST_UPDATE]", error);
     return NextResponse.json(
       { success: false, message: "Gagal menyimpan materi. Coba lagi." },
       { status: 500 }
