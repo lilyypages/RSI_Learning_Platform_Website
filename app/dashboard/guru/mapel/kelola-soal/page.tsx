@@ -44,6 +44,7 @@ function KelolaSoalForm() {
   const [opts, setOpts]           = useState(["","","",""]);
   const [correct, setCorrect]     = useState("A");
   const [diff, setDiff]           = useState("MEDIUM");
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
     if (!materialId) { setLoading(false); return; }
@@ -80,16 +81,24 @@ async function handleSave() {
 
   setSaving(true);
   try {
-    const res = await fetch(`/api/questions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const method = editingQuestion ? "PATCH" : "POST";
+
+    const url = editingQuestion
+      ? `/api/guru/subjects/${classSubjectId}/materials/${materialId}/questions/${editingQuestion.id}`
+      : `/api/questions`;
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         materialId,
-        questionText:  qText.trim(),
-        options:       opts.map(o => o.trim()),
-        correctAnswer: selectedAnswerText, // Mengirim teks jawaban (misal: "Jakarta") ke backend
-        difficulty:    diff,
-        orderIndex:    questions.length + 1,
+        questionText: qText.trim(),
+        options: opts.map(o => o.trim()),
+        correctAnswer: selectedAnswerText,
+        difficulty: diff,
+        orderIndex: questions.length + 1,
       }),
     });
     
@@ -111,13 +120,30 @@ async function handleSave() {
     // Memastikan kecocokan struktur data response dari backend
     if (data.success || data.question) {
       const newQuestion = data.question ?? data;
-      setQuestions(prev => [...prev, newQuestion]);
+      if (editingQuestion) {
+        setQuestions(prev =>
+          prev.map(q =>
+            q.id === editingQuestion.id
+              ? {
+                  ...q,
+                  questionText: qText.trim(),
+                  options: opts.map(o => o.trim()),
+                  correctAnswer: selectedAnswerText,
+                  difficulty: diff,
+                }
+              : q
+          )
+        );
+      } else {
+        setQuestions(prev => [...prev, newQuestion]);
+      }
       setShowForm(false);
       // Reset form ke kondisi semula
       setQText(""); 
       setOpts(["", "", "", ""]); 
       setCorrect("A"); 
       setDiff("MEDIUM");
+      setEditingQuestion(null);
     } else {
       setError(data.message ?? "Gagal menyimpan soal.");
     }
@@ -133,9 +159,7 @@ async function handleDelete(id: string) {
   if (!confirm("Apakah Anda yakin ingin menghapus soal ini?")) return;
   try {
     // Menembak tepat ke endpoint dynamic route /api/questions/[questionId]
-    const res = await fetch(`/api/questions/${id}`, { 
-      method: "DELETE" 
-    });
+    const res = await fetch(`/api/guru/subjects/${classSubjectId}/materials/${materialId}/questions/${id}`,{method: "DELETE",}); 
     
     // 🌟 PERBAIKAN BUG: Harus dicek res.ok dulu sebelum menghapus dari layar (state UI)
     if (res.ok) {
@@ -205,7 +229,7 @@ async function handleDelete(id: string) {
       {/* New question form */}
       {showForm && (
         <div className="bg-white p-8 rounded-[24px] border-2 border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.1)] space-y-6">
-          <h3 className="font-black text-[#2E7D32] text-lg">Buat Soal Baru</h3>
+          <h3 className="font-black text-[#2E7D32] text-lg">{editingQuestion ? "Edit Soal" : "Buat Soal Baru"}</h3>
 
           <div>
             <label className="text-xs font-black text-[#2E7D32]/50 uppercase tracking-widest block mb-2">Teks Pertanyaan *</label>
@@ -281,7 +305,25 @@ async function handleDelete(id: string) {
                 </div>
                 <div className="flex md:flex-col space-x-2 md:space-x-0 md:space-y-2 justify-end">
                   {/* Tombol Aksi menggunakan Orange Lembut untuk Edit, dan Red Lembut untuk Delete */}
-                  <button className="p-4 bg-[#FFF8E1] text-[#FF8F00] hover:bg-[#FF8F00] hover:text-white rounded-[16px] transition-all">
+                  <button
+                    onClick={() => {
+                      setEditingQuestion(q);
+                      setQText(q.questionText);
+                      setOpts(q.options);
+
+                      const answerIndex = q.options.findIndex(
+                        opt => opt === q.correctAnswer
+                      );
+
+                      setCorrect(
+                        ["A", "B", "C", "D"][answerIndex] || "A"
+                      );
+
+                      setDiff(q.difficulty);
+                      setShowForm(true);
+                    }}
+                    className="p-4 bg-[#FFF8E1] text-[#FF8F00] hover:bg-[#FF8F00] hover:text-white rounded-[16px] transition-all"
+                  >
                     <Edit3 size={20} />
                   </button>
                   <button onClick={() => handleDelete(q.id)} className="p-4 bg-[#FFEBEE] text-[#E53935] hover:bg-[#E53935] hover:text-white rounded-[16px] transition-all">
