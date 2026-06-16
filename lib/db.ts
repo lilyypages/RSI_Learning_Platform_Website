@@ -9,13 +9,9 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
-// 1. Konfigurasi Connection Pool untuk PostgreSQL
+// 1. Konfigurasi Connection Pool menggunakan satu string DATABASE_URL dari Neon
 const pool = new Pool({
-  host: process.env.DB_HOST ?? "localhost",
-  port: Number(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME ?? "rsi_test_platform",
-  user: process.env.DB_USER ?? "postgres",
-  password: process.env.DB_PASSWORD ?? "postgres",
+  connectionString: process.env.DATABASE_URL,
 });
 
 const adapter = new PrismaPg(pool);

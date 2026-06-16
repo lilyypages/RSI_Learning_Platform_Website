@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Send, ArrowLeft, MessageSquare, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -13,30 +13,42 @@ type DBMessage = {
   isRead: boolean;
 };
 
+// =========================================================================
+// 1. FUNGSI UTAMA (Ini yang dibaca Next.js pertama kali, wajib bersih tanpa useSearchParams langsung)
+// =========================================================================
 export default function ChatGuruPage() {
+  return (
+    <Suspense fallback={<div className="text-center p-6 text-xs text-[#2E7D32]/40 font-bold pt-12">Memuat ruang obrolan bimbingan...</div>}>
+      <IsiKontenChatUtama />
+    </Suspense>
+  );
+}
+
+// =========================================================================
+// 2. FUNGSI JEROAN CHAT (Semua logic asli dan state kamu dipindah utuh ke sini)
+// =========================================================================
+function IsiKontenChatUtama() {
+  //useSearchParams aman ditaruh di sini karena fungsi ini sudah dibungkus Suspense di atas
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  // Ambil targetUserId dari URL query (?targetUserId=xxx)
   const targetUserId = searchParams.get("targetUserId");
 
   const [messages, setMessages] = useState<DBMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [loadingChat, setLoadingChat] = useState(true);
   const [activeStudentName, setActiveStudentName] = useState("Siswa");
-  const [myUserId, setMyUserId] = useState<string | null>(null);
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  // 1. Ambil data nama siswa & info user login saat ini
+  // 1. Ambil data nama siswa
   useEffect(() => {
     if (!targetUserId) return;
 
     async function fetchTargetInfo() {
       try {
-        // Ambil data siswa untuk ditaruh di Header Chat
         const res = await fetch("/api/students");
-        const json = await res.ok ? await res.json() : null;
+        const json = res.ok ? await res.json() : null;
         if (json?.success && Array.isArray(json.students)) {
           const found = json.students.find((s: any) => s.user?.id === targetUserId);
           if (found) {
@@ -51,7 +63,7 @@ export default function ChatGuruPage() {
     fetchTargetInfo();
   }, [targetUserId]);
 
-  // 2. Ambil riwayat chat & jalankan interval polling (real-time palsu tanpa WebSocket)
+  // 2. Ambil riwayat chat & polling
   useEffect(() => {
     if (!targetUserId) return;
 
@@ -61,12 +73,6 @@ export default function ChatGuruPage() {
         const json = await res.json();
         if (json.success) {
           setMessages(json.messages);
-          
-          // Deteksi user id saya dari pesan pertama yang ada (jika ada)
-          if (json.messages.length > 0 && !myUserId) {
-            // Kita cari tahu ID kita lewat perbandingan field nanti, atau set via session.
-            // Untuk amannya, mari buat penanda dinamis di rendering.
-          }
         }
       } catch (err) {
         console.error("Gagal memuat riwayat pesan:", err);
@@ -77,12 +83,11 @@ export default function ChatGuruPage() {
 
     loadChat();
 
-    // Jalankan sinkronisasi pesan masuk otomatis setiap 4 detik
     const interval = setInterval(loadChat, 4000);
     return () => clearInterval(interval);
   }, [targetUserId]);
 
-  // 3. Auto Scroll ke pesan paling bawah setiap ada pesan baru
+  // 3. Auto Scroll
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -93,7 +98,7 @@ export default function ChatGuruPage() {
     if (!inputText.trim() || !targetUserId) return;
 
     const textToSend = inputText.trim();
-    setInputText(""); // Kosongkan input form langsung demi UX cepat
+    setInputText("");
 
     try {
       const res = await fetch("/api/chat", {
@@ -107,7 +112,6 @@ export default function ChatGuruPage() {
 
       const json = await res.json();
       if (json.success) {
-        // Tambahkan langsung ke dalam state array chat lokal
         setMessages((prev) => [...prev, json.message]);
       }
     } catch (err) {
@@ -158,8 +162,6 @@ export default function ChatGuruPage() {
           </div>
         ) : (
           messages.map((msg) => {
-            // Logika penentu bubble kanan (SAYA/GURU) atau kiri (DIA/SISWA)
-            // Karena ini di panel Guru, jika senderId === targetUserId berarti itu pesan dari SISWA (Kiri)
             const isFromTarget = msg.senderId === targetUserId;
 
             return (
