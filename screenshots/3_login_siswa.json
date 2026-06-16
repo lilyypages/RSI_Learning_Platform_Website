@@ -1,0 +1,1 @@
+{"success":true,"message":"Login berhasil","user":{"id":"75fdd6f8-74bd-4b41-aedb-75c5810dfa5a","email":"siswa@test.com","role":"STUDENT","name":"Siswa Contoh","imageUrl":null},"redirectTo":"/dashboard/siswa"}

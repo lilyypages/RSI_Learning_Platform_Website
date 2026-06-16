@@ -1,0 +1,1 @@
+{"success":true,"message":"Login berhasil","user":{"id":"5ea2ae85-f0e2-4e45-82e7-ebcdd44ccfb5","email":"guru@test.com","role":"TEACHER","name":"Guru Matematika","imageUrl":null},"redirectTo":"/dashboard/guru"}
