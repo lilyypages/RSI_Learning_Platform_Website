@@ -8,5 +8,7 @@ export async function GET(req: NextRequest) {
   if (!guard.ok) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
   const classes = await db.class.findMany({ orderBy: { name: "asc" } });
-  return NextResponse.json({ success: true, data: classes });
+  
+  // 🌟 REVISI: Ubah 'data' menjadi 'classes' agar konsisten dengan endpoint lainnya
+  return NextResponse.json({ success: true, classes });
 }

@@ -88,6 +88,20 @@
     transition: background 0.2s, color 0.2s;
   }
   .landingPageWrapper  .nav-links a:hover { background: var(--green-light); color: var(--green-dark); }
+  .landingPageWrapper .nav-links a.active {
+  color: #a8ff9e;
+}
+.landingPageWrapper .nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 14px;
+  right: 14px;
+  height: 4px;
+  background-color: var(--green);
+  border-radius: 2px;
+}
+  
   .btn-login {
     background: var(--green) !important;
     color: #fff !important;
@@ -96,7 +110,13 @@
     box-shadow: 0 4px 12px rgba(76,175,80,0.3);
     transition: transform 0.15s, box-shadow 0.15s !important;
   }
-  .landingPageWrapper  .btn-login:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(76,175,80,0.4) !important; background: var(--green-dark) !important; }
+.landingPageWrapper  .btn-login:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(76,175,80,0.4) !important; background: var(--green-dark) !important; }
+.landingPageWrapper .btn-login.active::after {
+  display: none !important; /* Hilangkan garis bawah khusus tombol login */
+}
+
+
+
 
   /* HERO */
   .landingPageWrapper  .hero {
@@ -252,7 +272,7 @@
   }
   .landingPageWrapper .panda-svg {
     width: 350px;
-    height: 400px;
+    height: 350px;
     animation: float 3s ease-in-out infinite;
   }
   @keyframes float {
@@ -297,15 +317,107 @@
     margin-bottom: 0.5rem;
   }
 
+/* ==========================================================
+   GLOBAL MEDIA QUERIES (RESPONSIVE SYSTEM)
+   ========================================================== */
+
+/* 1. Layar Laptop Kecil / Tablet Landscape (Maksimal 1024px) */
+@media (max-width: 1024px) {
+  .landingPageWrapper .hero-inner {
+    gap: 2rem;
+  }
+  .landingPageWrapper .hero-mascot {
+    flex: 0 0 280px;
+  }
+  .landingPageWrapper .panda-svg {
+    width: 280px;
+    height: 280px;
+  }
+}
+
+/* 2. Layar Tablet Portrait / iPad (Maksimal 768px) */
+@media (max-width: 768px) {
+  .landingPageWrapper .landing-nav {
+    padding: 0 1rem;
+  }
+  .landingPageWrapper .nav-links {
+    gap: 0.5rem; /* Merapatkan menu karena ruang sempit */
+  }
+  .landingPageWrapper .nav-links a {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+  
+  /* Membuat susunan Hero bertumpuk (Atas-Bawah) di layar HP/Tablet */
+  .landingPageWrapper .hero-inner {
+    flex-direction: column-reverse;
+    text-align: center;
+    gap: 3rem;
+    padding-top: 2rem;
+  }
+  .landingPageWrapper .hero-subtitle {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .landingPageWrapper .hero-cta {
+    justify-content: center;
+  }
+}
+
+/* 3. Layar HP Smartphone Kecil (Maksimal 520px) */
+@media (max-width: 520px) {
+  /* Menyembunyikan menu navigasi teks biasa di HP agar tidak meluap ke luar layar */
+  /* Catatan: Di masa depan disarankan membuat tombol menu hamburger */
+  .landingPageWrapper .nav-links li:not(:last-child) {
+    display: none;
+  }
+  
+  .landingPageWrapper .hero {
+    padding: 2rem 1rem;
+  }
+  .landingPageWrapper .hero-title {
+    font-size: 1.8rem;
+  }
+  .landingPageWrapper .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  .landingPageWrapper .btn-primary, 
+  .landingPageWrapper .btn-secondary {
+    width: 100%; /* Tombol CTA penuh di layar HP */
+    text-align: center;
+    padding: 12px 20px;
+  }
+  .landingPageWrapper .speech-bubble {
+    font-size: 0.85rem;
+    max-width: 220px;
+  }
+  .landingPageWrapper .panda-svg {
+    width: 220px;
+    height: 220px;
+  }
+}
+
   .landingPageWrapper /* ABOUT / OVERVIEW */
   .landingPageWrapper .about-section { background: #fff; }
   .landingPageWrapper .about-grid {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(4, minmax(220px, 1fr));
+    gap: 1.5rem;
   }
+@media (max-width: 1024px) {
+  .landingPageWrapper .about-grid {
+    grid-template-columns: repeat(2, 1fr); 
+  }
+}
+@media (max-width: 600px) {
+  .landingPageWrapper .about-grid {
+    /* Di layar HP, semua card akan berderet vertikal 1 kolom ke bawah agar nyaman dibaca */
+    grid-template-columns: 1fr; 
+  }
+}
+
   .landingPageWrapper .about-card {
     background: var(--bg);
     border-radius: var(--card-radius);
@@ -361,12 +473,39 @@
     background: linear-gradient(160deg, var(--green-light) 0%, #FFFDE7 100%);
   }
   .landingPageWrapper .features-grid {
-    max-width: 1100px;
+    max-width: 1300px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(6, minmax(160px, 1fr));
+    gap: 1.2rem;
+  }
+  @media (max-width: 1200px) {
+  .landingPageWrapper .features-grid {
+    /* Berubah menjadi 3 kolom di atas, 3 kolom di bawah (Sangat rapi dan pas) */
+    grid-template-columns: repeat(3, 1fr); 
     gap: 1.5rem;
   }
+}
+
+/* Layar Tablet / iPad (Maksimal 768px) */
+@media (max-width: 768px) {
+  .landingPageWrapper .features-grid {
+    /* Berubah menjadi susunan 2 kolom (2-2-2) */
+    grid-template-columns: repeat(2, 1fr); 
+  }
+}
+
+/* Layar HP (Maksimal 480px) */
+@media (max-width: 480px) {
+  .landingPageWrapper .features-grid {
+    /* Berubah menjadi 1 kolom vertikal ke bawah agar tulisan nyaman dibaca anak-anak */
+    grid-template-columns: 1fr; 
+  }
+}
+
+
+
+
   .landingPageWrapper .feature-card {
     background: #fff;
     border-radius: 20px;

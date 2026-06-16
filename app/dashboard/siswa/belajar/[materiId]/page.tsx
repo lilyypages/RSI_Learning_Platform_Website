@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, Play, FileText, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
+import YouTube from "react-youtube";
 
 export default function BelajarPage() {
   const { materiId } = useParams<{ materiId: string }>();
   const router = useRouter();
   const [material, setMaterial] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [completedVideos, setCompletedVideos] = useState<string[]>([]);
 
   useEffect(() => {
     fetch(`/api/materials/${materiId}`)
@@ -38,6 +40,41 @@ export default function BelajarPage() {
     EASY: "bg-green-100 text-green-700",
     MEDIUM: "bg-amber-100 text-amber-700",
     HARD: "bg-rose-100 text-rose-700",
+  };
+
+  const handleVideoEnd = async (
+    videoId: string,
+    title: string
+  ) => {
+    if (completedVideos.includes(videoId)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/videos/${videoId}/complete`,
+        {
+          method: "POST",
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setCompletedVideos((prev) => [
+          ...prev,
+          videoId,
+        ]);
+
+        alert(
+          data.alreadyCompleted
+            ? "Video sudah pernah diselesaikan."
+            : `Video "${title}" selesai! Poin ditambahkan.`
+        );
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -74,16 +111,39 @@ export default function BelajarPage() {
             <Play size={18} /> Video Pembelajaran
           </h2>
           {material.videos.map((v: any) => (
-            <div key={v.id} className="bg-white rounded-[24px] border border-slate-100 p-4 shadow-sm">
-              <p className="font-bold text-slate-700 mb-2">{v.title}</p>
+            <div
+              key={v.id}
+              className="bg-white rounded-[24px] border border-slate-100 p-4 shadow-sm"
+            >
+              <p className="font-bold text-slate-700 mb-2">
+                {v.title}
+              </p>
+
               <div className="aspect-video rounded-2xl overflow-hidden bg-slate-900">
-                <iframe
-                  src={v.embedUrl}
+                <YouTube
+                  videoId={
+                    v.embedUrl
+                      .replace(
+                        "https://www.youtube.com/embed/",
+                        ""
+                      )
+                      .split("?")[0]
+                  }
+                  opts={{
+                    width: "100%",
+                    height: "100%",
+                    playerVars: {
+                      autoplay: 0,
+                    },
+                  }}
                   className="w-full h-full"
-                  allowFullScreen
-                  title={v.title}
+                  onEnd={() => {
+                    console.log("VIDEO ENDED");
+                    handleVideoEnd(v.id, v.title);
+                  }}
                 />
               </div>
+
             </div>
           ))}
         </div>
@@ -100,3 +160,4 @@ export default function BelajarPage() {
     </div>
   );
 }
+

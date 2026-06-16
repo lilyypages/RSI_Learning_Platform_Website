@@ -61,56 +61,103 @@ function KelolaSoalForm() {
   };
   const CAPS = { EASY: 10, MEDIUM: 25, HARD: 15 };
 
-  async function handleSave() {
-    setError("");
-    if (!qText.trim()) { setError("Teks pertanyaan wajib diisi."); return; }
-    if (opts.some(o => !o.trim())) { setError("Semua 4 pilihan jawaban wajib diisi."); return; }
-    if (!materialId) { setError("materialId tidak ditemukan."); return; }
-    if (counts[diff as keyof typeof counts] >= CAPS[diff as keyof typeof CAPS]) {
-      setError(`Kapasitas soal ${LEVEL_LABEL[diff]} untuk bab ini sudah penuh.`); return;
-    }
+async function handleSave() {
+  setError("");
+  if (!qText.trim()) { setError("Teks pertanyaan wajib diisi."); return; }
+  if (opts.some(o => !o.trim())) { setError("Semua 4 pilihan jawaban wajib diisi."); return; }
+  if (!materialId) { setError("materialId tidak ditemukan."); return; }
+  if (counts[diff as keyof typeof counts] >= CAPS[diff as keyof typeof CAPS]) {
+    setError(`Kapasitas soal ${LEVEL_LABEL[diff]} untuk bab ini sudah penuh.`); return;
+  }
 
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/questions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          materialId,
-          questionText:  qText.trim(),
-          options:       opts,
-          correctAnswer: opts[["A","B","C","D"].indexOf(correct)],
-          difficulty:    diff,
-          orderIndex:    questions.length + 1,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setQuestions(prev => [...prev, data.question ?? data]);
-        setShowForm(false);
-        setQText(""); setOpts(["","","",""]); setCorrect("A"); setDiff("MEDIUM");
-      } else {
-        setError(data.message ?? "Gagal menyimpan soal.");
+  const targetIndex = ["A", "B", "C", "D"].indexOf(correct);
+  const selectedAnswerText = opts[targetIndex] ? opts[targetIndex].trim() : "";
+
+  if (!selectedAnswerText) {
+    setError("Kunci jawaban terpilih tidak boleh kosong.");
+    return;
+  }
+
+  setSaving(true);
+  try {
+    const res = await fetch(`/api/questions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        materialId,
+        questionText:  qText.trim(),
+        options:       opts.map(o => o.trim()),
+        correctAnswer: selectedAnswerText, // Mengirim teks jawaban (misal: "Jakarta") ke backend
+        difficulty:    diff,
+        orderIndex:    questions.length + 1,
+      }),
+    });
+    
+    if (!res.ok) {
+      // Menangani error jika respons bukan JSON murni (seperti 405 HTML atau 500 Server Error)
+      let errorMessage = `Server merespon dengan status ${res.status}.`;
+      try {
+        const data = await res.json();
+        errorMessage = data.message || errorMessage;
+      } catch {
+        const textError = await res.text();
+        console.error("Server murni string error:", textError);
       }
-    } catch {
-      setError("Koneksi gagal. Coba lagi.");
-    } finally {
-      setSaving(false);
+      setError(errorMessage);
+      return;
     }
-  }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Hapus soal ini?")) return;
-    try {
-      await fetch(`/api/questions/${id}`, { method: "DELETE" });
-      setQuestions(prev => prev.filter(q => q.id !== id));
-    } catch {}
+    const data = await res.json();
+    // Memastikan kecocokan struktur data response dari backend
+    if (data.success || data.question) {
+      const newQuestion = data.question ?? data;
+      setQuestions(prev => [...prev, newQuestion]);
+      setShowForm(false);
+      // Reset form ke kondisi semula
+      setQText(""); 
+      setOpts(["", "", "", ""]); 
+      setCorrect("A"); 
+      setDiff("MEDIUM");
+    } else {
+      setError(data.message ?? "Gagal menyimpan soal.");
+    }
+  } catch (err) {
+    console.error("Eror submit kuis:", err);
+    setError("Koneksi gagal atau format data salah. Coba lagi.");
+  } finally {
+    setSaving(false);
   }
+}
+
+async function handleDelete(id: string) {
+  if (!confirm("Apakah Anda yakin ingin menghapus soal ini?")) return;
+  try {
+    // Menembak tepat ke endpoint dynamic route /api/questions/[questionId]
+    const res = await fetch(`/api/questions/${id}`, { 
+      method: "DELETE" 
+    });
+    
+    // 🌟 PERBAIKAN BUG: Harus dicek res.ok dulu sebelum menghapus dari layar (state UI)
+    if (res.ok) {
+      setQuestions(prev => prev.filter(q => q.id !== id));
+    } else {
+      let msg = "Gagal menghapus soal dari server.";
+      try {
+        const data = await res.json();
+        msg = data.message || msg;
+      } catch {}
+      alert(msg);
+    }
+  } catch (err) {
+    console.error("Eror saat menghapus soal:", err);
+    alert("Koneksi gagal. Coba lagi.");
+  }
+}
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-20">
       {/* Mengubah warna link kembali ke hijau tua */}
-      <Link href="/dashboard/guru/mapel" className="flex items-center text-[#2E7D32]/70 font-bold text-sm hover:text-[#2E7D32] w-fit transition-colors">
+      <Link href={`/dashboard/guru/mapel/kelola-materi?classSubjectId=${classSubjectId}`} className="flex items-center text-[#2E7D32]/70 font-bold text-sm hover:text-[#2E7D32] w-fit transition-colors">
         <ChevronLeft size={18} /> Kembali
       </Link>
 

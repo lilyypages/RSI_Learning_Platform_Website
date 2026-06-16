@@ -4,10 +4,12 @@ import {
   Search, Filter, MessageSquare, AlertCircle,
   CheckCircle2, Users, TrendingUp, Eye
 } from "lucide-react";
+import Link from "next/link";
  
-// Types
+// Types sesuai dengan data terproses dari Prisma Schema
 type StudentRow = {
-  id: string;
+  monitoringId: string;
+  userId: string; 
   name: string;
   avg: number;
   status: "Sangat Baik" | "Normal" | "Butuh Perhatian";
@@ -34,15 +36,8 @@ function barColor(avg: number) {
   return "bg-[#E53935]";
 }
  
-// Fallback dummy data
-const DUMMY: StudentRow[] = [
-  { id: "1", name: "Talitha Sukma",  avg: 88, status: "Sangat Baik",      completionPercent: 90, adaptiveLevel: "ADVANCED"  },
-  { id: "2", name: "Budi Santoso",   avg: 65, status: "Butuh Perhatian",  completionPercent: 45, adaptiveLevel: "REMEDIAL"  },
-  { id: "3", name: "Citra Lestari",  avg: 95, status: "Sangat Baik",      completionPercent: 100, adaptiveLevel: "ADVANCED" },
-  { id: "4", name: "Dimas Anggara",  avg: 72, status: "Normal",           completionPercent: 65, adaptiveLevel: "STANDARD"  },
-];
+
  
-// Component
 export default function MonitoringSiswa() {
   const [students, setStudents]   = useState<StudentRow[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -50,41 +45,74 @@ export default function MonitoringSiswa() {
   const [filter, setFilter]       = useState<"Semua" | StudentRow["status"]>("Semua");
   const [showFilter, setShowFilter] = useState(false);
  
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/students?includeProgress=true");
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json();
- 
-        if (Array.isArray(data) && data.length > 0) {
-          const rows: StudentRow[] = data.map((s: any) => {
-            const totalScore = s.progress?.reduce(
-              (sum: number, p: any) => sum + (p.totalScore ?? 0), 0
-            ) ?? 0;
-            const count = s.progress?.length || 1;
-            const avg   = Math.round(totalScore / count);
-            return {
-              id:               s.id,
-              name:             s.user?.name ?? "—",
-              avg,
-              status:           getStatus(avg),
-              completionPercent: s.progress?.[0]?.completionPercent ?? 0,
-              adaptiveLevel:    s.progress?.[0]?.adaptiveLevel ?? "STANDARD",
-            };
-          });
-          setStudents(rows);
-        } else {
-          setStudents(DUMMY);
+useEffect(() => {
+  async function load() {
+    try {
+      // Panggil API dengan parameter includeProgress agar nilai rata-rata bisa dihitung
+      const res = await fetch("/api/students?includeProgress=true");
+      if (!res.ok) throw new Error("Gagal mengambil data dari API");
+      
+      const json = await res.json();
+
+      // PASTIKAN: Membaca properti json.success dan json.students sesuai struktur API Anda
+      if (json.success && Array.isArray(json.students)) {
+        
+        // Jika di database memang belum ada data siswa sama sekali
+        if (json.students.length === 0) {
+          setStudents([]);
+          setLoading(false);
+          return;
         }
-      } catch {
-        setStudents(DUMMY);
-      } finally {
-        setLoading(false);
+
+const rows: StudentRow[] = json.students.map((s: any) => {
+  const progressArray = s.progress || [];
+  const count = progressArray.length;
+
+  // 1. Hitung rata-rata totalScore dari data Prisma
+  const totalScore = progressArray.reduce(
+    (sum: number, p: any) => sum + (p.totalScore ?? 0), 0
+  );
+  const avg = count > 0 ? Math.round(totalScore / count) : 0;
+
+  // 2. Hitung rata-rata completionPercent
+  const totalCompletion = progressArray.reduce(
+    (sum: number, p: any) => sum + (p.completionPercent ?? 0), 0
+  );
+  const completionPercent = count > 0 ? Math.round(totalCompletion / count) : 0;
+
+  // 3. Ambil adaptiveLevel aktivitas paling terakhir
+  const adaptiveLevel = count > 0 
+    ? progressArray[count - 1]?.adaptiveLevel ?? "STANDARD"
+    : "STANDARD";
+
+  return {
+    monitoringId: s.id,
+    userId: s.userId, // 🌟 WAJIB DITAMBAHKAN AGAR LINK CHAT TIDAK UNDEFINED!
+    name: s.user?.name ?? "Tanpa Nama", 
+    avg,
+    status: getStatus(avg),
+    completionPercent,
+    adaptiveLevel,
+  };
+});
+
+        // Urutkan peringkat dari nilai tertinggi ke terendah
+        rows.sort((a, b) => b.avg - a.avg);
+        setStudents(rows);
+      } else {
+        // Jika format response tidak sesuai, set ke array kosong agar tidak crash
+        setStudents([]);
       }
+    } catch (err) {
+      console.error("Error monitoring data:", err);
+      setStudents([]); // Hindari fallback otomatis ke dummy agar data murni terjaga
+    } finally {
+      setLoading(false);
     }
-    load();
-  }, []);
+  }
+  
+  load();
+}, []);
  
   const total        = students.length;
   const needHelp     = students.filter(s => s.status === "Butuh Perhatian").length;
@@ -93,7 +121,7 @@ export default function MonitoringSiswa() {
     : "—";
  
   const stats = [
-    { label: "Total Siswa",      value: String(total),     icon: Users,      color: "text-[#2E7D32]",   bg: "bg-[#E8F5E9]"   },
+    { label: "Total Siswa",      value: String(total),     icon: Users,       color: "text-[#2E7D32]",   bg: "bg-[#E8F5E9]"   },
     { label: "Rata-rata Kelas",  value: classAvg,         icon: TrendingUp, color: "text-[#FF8F00]", bg: "bg-[#FFF8E1]" },
     { label: "Butuh Perhatian",  value: String(needHelp), icon: AlertCircle, color: "text-[#E53935]",   bg: "bg-[#FFEBEE]"   },
   ];
@@ -104,33 +132,34 @@ export default function MonitoringSiswa() {
     return matchSearch && matchFilter;
   });
  
-  return (
-    <div className="space-y-8">
+return (
+    // 🌟 PERBAIKAN: Tambahkan max-w-full, min-w-0, dan overflow-x-hidden pada pembungkus utama halaman
+    <div className="space-y-8 max-w-full min-w-0 overflow-x-hidden">
  
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
           <div
             key={i}
-            className="bg-white p-6 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.15)] flex items-center space-x-4"
+            className="bg-white p-6 rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.15)] flex items-center space-x-4 min-w-0" // Ditambahkan min-w-0
           >
-            <div className={`${stat.bg} ${stat.color} p-4 rounded-2xl`}>
+            <div className={`${stat.bg} ${stat.color} p-4 rounded-2xl flex-shrink-0`}> {/* Ditambahkan flex-shrink-0 */}
               <stat.icon size={24} />
             </div>
-            <div>
-              <p className="text-xs font-black text-[#2E7D32]/60 uppercase tracking-widest">{stat.label}</p>
-              <p className="text-2xl font-black text-[#2E7D32]">{stat.value}</p>
+            <div className="min-w-0 flex-1"> {/* Ditambahkan pembungkus min-w-0 agar teks angka aman */}
+              <p className="text-xs font-black text-[#2E7D32]/60 uppercase tracking-widest truncate">{stat.label}</p>
+              <p className="text-2xl font-black text-[#2E7D32] truncate">{stat.value}</p>
             </div>
           </div>
         ))}
       </div>
  
-      {/* Header + Search */}
+      {/* Header & Search/Filter Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#2E7D32] tracking-tight">Monitoring Siswa 📊</h1>
           <p className="text-[#2E7D32]/70 text-sm font-medium">
-            Data real-time perkembangan kemampuan adaptif siswa.
+            Data real-time perkembangan kemampuan adaptif siswa dari database.
           </p>
         </div>
  
@@ -146,7 +175,6 @@ export default function MonitoringSiswa() {
             />
           </div>
  
-          {/* Filter dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowFilter(v => !v)}
@@ -172,106 +200,117 @@ export default function MonitoringSiswa() {
         </div>
       </div>
  
-      {/* Table */}
-      <div className="bg-white rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center h-48 text-[#2E7D32]/50 font-bold">
-            Memuat data siswa...
-          </div>
-        ) : visible.length === 0 ? (
-          <div className="flex items-center justify-center h-48 text-[#2E7D32]/50 font-bold">
-            Tidak ada siswa ditemukan.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#E8F5E9]/50 border-b border-[#E8F5E9]">
-                  {["Nama Siswa", "Status", "Rata-rata", "Progress", "Level Adaptif", "Aksi"].map(h => (
-                    <th
-                      key={h}
-                      className="px-8 py-5 text-[11px] font-black text-[#2E7D32]/60 uppercase tracking-[0.2em]"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E8F5E9]/50">
-                {visible.map(s => (
-                  <tr key={s.id} className="hover:bg-[#FFFBF0] transition-all group">
- 
-                    {/* Name */}
-                    <td className="px-8 py-5">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-[#E8F5E9] rounded-full flex items-center justify-center font-black text-[#2E7D32] group-hover:bg-[#4CAF50] group-hover:text-white transition-colors">
-                          {s.name.charAt(0)}
-                        </div>
-                        <span className="font-bold text-[#2E7D32]">{s.name}</span>
-                      </div>
-                    </td>
- 
-                    {/* Status badge */}
-                    <td className="px-8 py-5">
-                      <span className={`inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tight ${statusStyle(s.status)}`}>
-                        {s.status === "Butuh Perhatian"
-                          ? <AlertCircle size={12} />
-                          : <CheckCircle2 size={12} />}
-                        <span>{s.status}</span>
-                      </span>
-                    </td>
- 
-                    {/* Avg score */}
-                    <td className="px-8 py-5">
-                      <div className="flex flex-col">
-                        <span className="font-black text-[#2E7D32] text-lg">{s.avg}%</span>
-                        <div className="w-24 bg-[#E8F5E9] h-1.5 rounded-full mt-1 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${barColor(s.avg)}`}
-                            style={{ width: `${s.avg}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
- 
-                    {/* Completion */}
-                    <td className="px-8 py-5">
-                      <span className="font-bold text-[#2E7D32]/80">
-                        {Math.round(s.completionPercent)}%
-                      </span>
-                    </td>
- 
-                    {/* Adaptive level */}
-                    <td className="px-8 py-5">
-                      <span className={`text-xs font-black px-3 py-1 rounded-lg ${
-                        s.adaptiveLevel === "ADVANCED"  ? "bg-[#E3F2FD] text-[#1976D2]" :
-                        s.adaptiveLevel === "REMEDIAL"  ? "bg-[#FFEBEE] text-[#E53935]" :
-                        "bg-[#E8F5E9] text-[#2E7D32]"
-                      }`}>
-                        {s.adaptiveLevel === "ADVANCED"  ? "Maju" :
-                         s.adaptiveLevel === "REMEDIAL"  ? "Remedial" : "Standar"}
-                      </span>
-                    </td>
- 
-                    {/* Actions */}
-                    <td className="px-8 py-5">
-                      <div className="flex space-x-2">
-                        <button className="p-3 bg-[#FFF8E1] text-[#FF8F00] hover:bg-[#FF8F00] hover:text-white rounded-[16px] transition-all shadow-sm" title="Kirim Pesan">
-                          <MessageSquare size={16} />
-                        </button>
-                        <button className="p-3 bg-[#E0F2F1] text-[#00897B] hover:bg-[#00897B] hover:text-white rounded-[16px] transition-all shadow-sm" title="Lihat Detail">
-                          <Eye size={16} />
-                        </button>
-                      </div>
-                    </td>
- 
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+{/* Students Data Table */}
+{/* Students Data Table */}
+<div className="bg-white rounded-[24px] border border-[#E8F5E9] shadow-[0_8px_32px_rgba(0,0,0,0.15)] max-w-full overflow-hidden">
+  {loading ? (
+    <div className="flex items-center justify-center h-48 text-[#2E7D32]/50 font-bold">
+      Memuat data siswa dari database...
+    </div>
+  ) : visible.length === 0 ? (
+    <div className="flex items-center justify-center h-48 text-[#2E7D32]/50 font-bold">
+      Tidak ada siswa ditemukan.
+    </div>
+  ) : (
+    <div className="overflow-x-auto w-full block asset-scroll-clean">
+      <table className="w-full text-left border-collapse min-w-[900px]">
+        <thead>
+          <tr className="bg-[#E8F5E9]/50 border-b border-[#E8F5E9]">
+            {["Peringkat", "Nama Siswa", "Status", "Rata-rata", "Progress", "Level Adaptif", "Aksi"].map((h) => (
+              <th
+                key={h}
+                className="px-8 py-5 text-[11px] font-black text-[#2E7D32]/60 uppercase tracking-[0.2em]"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#E8F5E9]/50">
+          {visible.map((s, index) => (
+            <tr key={s.monitoringId} className="hover:bg-[#FFFBF0] transition-all group">
+              <td className="px-8 py-5 font-black text-[#2E7D32]/60 text-sm">
+                #{index + 1}
+              </td>
+              
+              <td className="px-8 py-5">
+                <div className="flex items-center space-x-3 whitespace-nowrap">
+                  <div className="w-10 h-10 bg-[#E8F5E9] rounded-full flex items-center justify-center flex-shrink-0 font-black text-[#2E7D32] group-hover:bg-[#4CAF50] group-hover:text-white transition-colors">
+                    {s.name.charAt(0)}
+                  </div>
+                  <span className="font-bold text-[#2E7D32]">{s.name}</span>
+                </div>
+              </td>
+              
+              <td className="px-8 py-5">
+                <span className={`inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tight whitespace-nowrap ${statusStyle(s.status)}`}>
+                  {s.status === "Butuh Perhatian" ? (
+                    <AlertCircle size={12} />
+                  ) : (
+                    <CheckCircle2 size={12} />
+                  )}
+                  <span>{s.status}</span>
+                </span>
+              </td>
+              
+              <td className="px-8 py-5">
+                <div className="flex flex-col whitespace-nowrap">
+                  <span className="font-black text-[#2E7D32] text-lg">{s.avg}%</span>
+                  <div className="w-24 bg-[#E8F5E9] h-1.5 rounded-full mt-1 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${barColor(s.avg)}`}
+                      style={{ width: `${s.avg}%` }}
+                    />
+                  </div>
+                </div>
+              </td>
+              
+              <td className="px-8 py-5 font-bold text-[#2E7D32]/80 whitespace-nowrap">
+                {s.completionPercent}%
+              </td>
+              
+              <td className="px-8 py-5">
+                <span className={`text-xs font-black px-3 py-1 rounded-lg whitespace-nowrap ${
+                  s.adaptiveLevel === "ADVANCED" ? "bg-[#E3F2FD] text-[#1976D2]" :
+                  s.adaptiveLevel === "REMEDIAL" ? "bg-[#FFEBEE] text-[#E53935]" :
+                  "bg-[#E8F5E9] text-[#2E7D32]"
+                }`}>
+                  {s.adaptiveLevel === "ADVANCED" ? "Maju" :
+                   s.adaptiveLevel === "REMEDIAL" ? "Remedial" : "Standar"}
+                </span>
+              </td>
+              
+              {/* 🌟 KOLOM AKSI (SUDAH FIX DAN BERSIH) */}
+              <td className="px-8 py-5">
+                <div className="flex space-x-2">
+                  
+                  {/* Tombol Chat */}
+                  <Link 
+                    href={`/dashboard/guru/chat?targetUserId=${s.userId}`} 
+                    className="p-3 bg-[#FFF8E1] text-[#FF8F00] hover:bg-[#FF8F00] hover:text-white rounded-[16px] transition-all shadow-sm flex-shrink-0 block" 
+                    title="Kirim Pesan"
+                  >
+                    <MessageSquare size={16} />
+                  </Link>
+
+                  {/* Tombol Detail (Eye) */}
+                  <Link 
+                    href={`/dashboard/guru/monitoring/${s.monitoringId}`} 
+                    className="p-3 bg-[#E0F2F1] text-[#00897B] hover:bg-[#00897B] hover:text-white rounded-[16px] transition-all shadow-sm flex-shrink-0 block" 
+                    title="Lihat Detail"
+                  >
+                    <Eye size={16} />
+                  </Link>
+
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
  
       {/* Footer count */}
       {!loading && (

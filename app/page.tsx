@@ -9,7 +9,7 @@ export default function Home() {
   const [bubbleText, setBubbleText] = useState<string>(
     'Halo! Aku <strong>Panda</strong> 🐼<br>Yuk belajar bareng biar makin pintar!<br>Nanti dapat poin dan hadiah lo! 🎁'
   );
-
+  const [activeSection, setActiveSection] = useState<string>('beranda');
   useEffect(() => {
     // 1. Scroll Reveal Logic using Intersection Observer
     const observer = new IntersectionObserver(
@@ -22,8 +22,24 @@ export default function Home() {
       },
       { threshold: 0.12 }
     );
-
     document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Jika section masuk area pandang lebih dari 40%, jadikan aktif
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { threshold: 0.4, rootMargin: "-70px 0px 0px 0px" } // dikurangi tinggi navbar (70px)
+    );
+    
+    // Daftarkan semua elemen section yang memiliki ID untuk dipantau
+    document.querySelectorAll('section[id]').forEach((section) => {
+      sectionObserver.observe(section);
+    });
 
     // 2. Animated Speech Bubble Cycling
     const msgs = [
@@ -84,12 +100,10 @@ export default function Home() {
           <span className="logo-icon">🐼</span> SIPANDA
         </a>
         <ul className="nav-links">
-          <li><a href="#tentang">Tentang</a></li>
-          <li><a href="#fitur">Fitur</a></li>
-          <li><a href="#peran">Pengguna</a></li>
-          <li><a href="#cara-kerja">Cara Kerja</a></li>
-
-
+          <li><a href="#tentang"className={activeSection === 'tentang' ? 'active' : ''}>Tentang</a></li>
+          <li><a href="#fitur" className={activeSection === 'fitur' ? 'active' : ''}>Fitur</a></li>
+          <li><a href="#peran" className={activeSection === 'peran' ? 'active' : ''}>Pengguna</a></li>
+          <li><a href="#cara-kerja" className={activeSection === 'cara-kerja' ? 'active' : ''}>Cara Kerja</a></li>
           <li><a href="/auth/login" className="btn-login">Masuk</a></li>
         </ul>
       </nav>
@@ -124,7 +138,7 @@ export default function Home() {
               alt="Panda Study Mascot"
               className="panda-svg"
               width={350}
-              height={400}
+              height={350}
             />
             <span className="stars-deco">⭐</span>
           </div>
@@ -170,7 +184,6 @@ export default function Home() {
 
       {/* FEATURES */}
       <section className="features-section" id="fitur">
-        <span className="section-emoji">✨</span>
         <h2 className="section-title">Fitur Unggulan SIPANDA</h2>
         <p className="section-sub">Belajar jadi lebih seru dengan berbagai fitur canggih yang dirancang khusus untuk siswa SD!</p>
         <div className="features-grid reveal">
@@ -264,7 +277,6 @@ export default function Home() {
 
       {/* ROLES */}
       <section className="roles-section" id="peran">
-        <span className="section-emoji">👥</span>
         <h2 className="section-title">Siapa Saja Penggunanya?</h2>
         <p className="section-sub">SIPANDA melayani seluruh ekosistem sekolah — login sesuai akun masing-masing dan langsung diarahkan ke dashboard yang tepat!</p>
         <div className="roles-grid reveal">
@@ -321,7 +333,6 @@ export default function Home() {
 
       {/* SCOPE */}
       <section className="scope-section">
-        <span className="section-emoji">📋</span>
         <h2 className="section-title">Apa yang Bisa &amp; Tidak Bisa SIPANDA Lakukan?</h2>
         <p className="section-sub">Transparansi adalah penting. Berikut ruang lingkup sistem SIPANDA dengan jelas!</p>
         <div className="scope-cols reveal">

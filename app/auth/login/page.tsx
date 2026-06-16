@@ -43,7 +43,7 @@ function LoginForm() {
     }
   };
 
-  return (
+return (
     <div className="login-viewport">
       {/* Inject CSS langsung untuk menjamin keindahan layout bebas dari error Tailwind */}
       <style>{`
@@ -53,7 +53,8 @@ function LoginForm() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: #f1f5f9;
+          /* Menggunakan background cream pastel bawaan SIPANDA */
+          background: linear-gradient(135deg, #E8F5E9 0%, #FFFDE7 50%, #E3F2FD 100%);
           font-family: var(--font-nunito), -apple-system, sans-serif;
           box-sizing: border-box;
           padding: 20px;
@@ -61,47 +62,59 @@ function LoginForm() {
         .login-card {
           background: #ffffff;
           width: 100%;
-          max-width: 400px;
-          border-radius: 16px;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05), 0 10px 15px -3px rgb(0 0 0 / 0.05);
+          max-width: 420px;
+          /* Menggunakan radius card membulat besar khas anak-anak */
+          border-radius: 24px;
+          /* Border bawah tebal 3D berwarna kuning cerah */
+          border: 3px solid #FFD600;
+          box-shadow: 0 12px 32px rgba(0,0,0,0.06);
           padding: 40px 32px;
           box-sizing: border-box;
-          border: 1px solid #e2e8f0;
+          position: relative;
         }
         .login-header {
           text-align: center;
-          margin-bottom: 32px;
+          margin-bottom: 28px;
         }
         .login-brand-icon {
-          font-size: 32px;
-          margin-bottom: 12px;
-          display: inline-block;
+          font-size: 2.2rem;
+          margin-bottom: 8px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 60px;
+          height: 60px;
+          background: #E8F5E9; /* hijau muda */
+          border-radius: 50%;
+          text-decoration: none;
+          box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1);
         }
         .login-title {
-          font-size: 24px;
-          font-weight: 700;
-          color: #0f172a;
-          margin: 0 0 8px 0;
-          letter-spacing: -0.5px;
+          font-family: 'Baloo 2', cursive;
+          font-size: 26px;
+          font-weight: 800;
+          color: #2E7D32; /* Hijau tua */
+          margin: 4px 0 6px 0;
+          letter-spacing: -0.3px;
         }
         .login-subtitle {
-          font-size: 13px;
-          color: #64748b;
+          font-size: 14px;
+          font-weight: 600;
+          color: #666;
           margin: 0;
           line-height: 1.5;
         }
         .form-group {
-          margin-bottom: 20px;
+          margin-bottom: 18px;
           display: flex;
           flex-direction: column;
         }
         .form-label {
-          font-size: 12px;
-          font-weight: 600;
-          color: #334155;
+          font-size: 13px;
+          font-weight: 800;
+          color: #2E7D32; /* Label Hijau Tua */
           margin-bottom: 6px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.3px;
         }
         .input-wrapper {
           position: relative;
@@ -113,27 +126,29 @@ function LoginForm() {
         .input-icon-left {
           position: absolute;
           left: 14px;
-          color: #94a3b8;
+          color: #4CAF50; /* Icon hijau */
           display: flex;
           align-items: center;
           pointer-events: none;
+          font-size: 16px;
         }
         .input-field {
           width: 100%;
           padding: 12px 16px 12px 42px;
-          background-color: #f8fafc;
-          border: 1px solid #cbd5e1;
-          border-radius: 10px;
-          font-size: 14px;
+          background-color: #FFFBF0; /* warna background form cream hangat */
+          border: 2.5px solid #cbd5e1;
+          border-radius: 14px;
+          font-size: 15px;
           color: #334155;
+          font-weight: 600;
           outline: none;
           transition: all 0.2s ease;
           box-sizing: border-box;
         }
         .input-field:focus {
           background-color: #ffffff;
-          border-color: #0ea5e9;
-          box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+          border-color: #4CAF50; /* Fokus berubah jadi hijau */
+          box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.15);
         }
         .input-toggle-right {
           position: absolute;
@@ -147,40 +162,50 @@ function LoginForm() {
           padding: 0;
         }
         .input-toggle-right:hover {
-          color: #64748b;
+          color: #2E7D32;
         }
         .btn-submit {
           width: 100%;
-          height: 44px;
-          background-color: #0f172a;
+          height: 48px;
+          background-color: #4CAF50; /* Tombol Utama Hijau */
           color: #ffffff;
           border: none;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 600;
+          border-radius: 20px;
+          font-size: 16px;
+          font-weight: 800;
           cursor: pointer;
-          transition: background-color 0.2s ease;
+          /* Efek tombol 3D empuk khas anak-anak */
+          box-shadow: 0 5px 0 #2E7D32, 0 6px 16px rgba(76,175,80,0.3);
+          transition: transform 0.1s, box-shadow 0.1s;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          margin-top: 24px;
+          margin-top: 26px;
         }
         .btn-submit:hover {
-          background-color: #1e293b;
+          background-color: #43A047;
+          transform: translateY(-2px);
+          box-shadow: 0 7px 0 #2E7D32, 0 8px 20px rgba(76,175,80,0.35);
+        }
+        .btn-submit:active {
+          transform: translateY(4px);
+          box-shadow: 0 1px 0 #2E7D32;
         }
         .btn-submit:disabled {
           opacity: 0.6;
           cursor: not-allowed;
+          box-shadow: none;
+          transform: none;
         }
         .error-container {
-          background-color: #fef2f2;
-          border: 1px solid #fee2e2;
-          color: #991b1b;
+          background-color: #F3E5F5; /* Menggunakan warna ungu muda bawaan modal token */
+          border: 2px solid #7B1FA2;
+          color: #7B1FA2;
           padding: 12px;
-          border-radius: 10px;
+          border-radius: 14px;
           font-size: 13px;
-          font-weight: 500;
+          font-weight: 700;
           margin-bottom: 20px;
           display: flex;
           align-items: center;
@@ -189,29 +214,39 @@ function LoginForm() {
         .dev-hint {
           margin-top: 24px;
           padding: 12px;
-          background-color: #f8fafc;
-          border: 1px solid #f1f5f9;
-          border-radius: 10px;
-          font-size: 11px;
-          color: #64748b;
+          background-color: #FFFDE7; /* Kuning terang pastel */
+          border: 2.5px dashed #FFD600; /* Garis putus-putus kuning */
+          border-radius: 14px;
+          font-size: 12px;
+          color: #FF8F00; /* Teks Oranye */
           text-align: center;
           line-height: 1.6;
+          font-weight: 700;
         }
         .dev-token {
           font-family: monospace;
           background: #ffffff;
           padding: 2px 6px;
-          border-radius: 4px;
-          border: 1px solid #e2e8f0;
-          color: #334155;
-          font-weight: 600;
+          border-radius: 6px;
+          border: 1px solid #FFD600;
+          color: #2E7D32;
+          font-weight: 800;
         }
         .login-footer {
           text-align: center;
-          font-size: 11px;
+          font-size: 12px;
+          font-weight: 600;
           color: #94a3b8;
           margin-top: 24px;
           line-height: 1.5;
+        }
+        .login-footer a {
+          color: #1976D2; /* Link biru */
+          text-decoration: none;
+          font-weight: 700;
+        }
+        .login-footer a:hover {
+          text-decoration: underline;
         }
       `}</style>
 
@@ -219,8 +254,8 @@ function LoginForm() {
         {/* Header */}
         <div className="login-header">
           <Link href="/" className="login-brand-icon">🐼</Link>
-          <h1 className="login-title">Selamat Datang Kembali</h1>
-          <p className="login-subtitle">Silakan masuk menggunakan akun akademik Anda.</p>
+          <h1 className="login-title">Masuk ke SIPANDA</h1>
+          <p className="login-subtitle">Yuk, masukkan akunmu untuk mulai petualangan belajar! 🚀</p>
         </div>
 
         {/* Error Banner */}

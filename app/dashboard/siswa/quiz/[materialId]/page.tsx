@@ -65,7 +65,8 @@ export default function QuizPage() {
   const [isCorrect, setIsCorrect]         = useState<boolean | null>(null);
   const [correctAnswer, setCorrectAnswer] = useState<string>("");
   const [finish, setFinish]               = useState<FinishData | null>(null);
-  const [submitting, setSubmitting]       = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const startQuiz = useCallback(async () => {
     setQuizState("loading");
@@ -76,7 +77,14 @@ export default function QuizPage() {
         body: JSON.stringify({ materialId }),
       });
       const data = await res.json();
-      if (!res.ok || !data.sessionId) { setQuizState("error"); return; }
+      if (!res.ok || !data.sessionId) {
+        setErrorMessage(
+          data.message ||
+          "Gagal memulai quiz."
+        );
+        setQuizState("error");
+        return;
+      }
       setSessionId(data.sessionId);
       setQuestion({ ...data.question, options: normalizeOptions(data.question.options) });
       setCurrentLevel(data.currentLevel);
@@ -86,7 +94,7 @@ export default function QuizPage() {
       setSelected(null);
       setIsCorrect(null);
       setQuizState("playing");
-    } catch { setQuizState("error"); }
+    } catch {setErrorMessage("Terjadi kesalahan saat memuat quiz.");setQuizState("error");}
   }, [materialId]);
 
   useEffect(() => { startQuiz(); }, [startQuiz]);
@@ -152,7 +160,7 @@ export default function QuizPage() {
   if (quizState === "error") return (
     <div className="max-w-2xl mx-auto py-20 text-center space-y-4">
       <p className="text-rose-500 font-black text-lg">Gagal memuat quiz.</p>
-      <p className="text-slate-400 text-sm">Pastikan materi ini memiliki soal tersedia.</p>
+      <p className="text-slate-400 text-sm">{errorMessage}</p>
       <button onClick={startQuiz} className="flex items-center space-x-2 mx-auto px-6 py-3 bg-[#4CAF50] text-white rounded-2xl font-bold hover:bg-[#2E7D32] transition-all">
         <RefreshCw size={16} /><span>Coba Lagi</span>
       </button>
