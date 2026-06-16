@@ -62,16 +62,15 @@ export default function OrtuLayout({ children }: { children: React.ReactNode }) 
 
         {/* Footer Sidebar */}
         <div className="p-6 border-t border-[#E8F5E9]/10">
-          <button
-            onClick={async () => {
-              await fetch("/api/auth/logout", { method: "POST" });
-              window.location.href = "/auth/login";
-            }}
-            className="flex items-center space-x-3 text-[#A5D6A7] hover:text-[#E53935] p-4 rounded-[24px] hover:bg-white/5 transition-all font-black text-sm w-full text-left"
-          >
-            <LogOut size={20} className="shrink-0" />
-            <span>Keluar Sistem</span>
-          </button>
+          <form action="/api/auth/logout" method="POST">
+            <button
+              type="submit"
+              className="flex items-center space-x-3 text-[#A5D6A7] hover:text-[#E53935] p-4 rounded-[24px] hover:bg-white/5 transition-all font-black text-sm w-full text-left"
+            >
+              <LogOut size={20} className="shrink-0" />
+              <span>Keluar Sistem</span>
+            </button>
+          </form>
         </div>
       </aside>
 

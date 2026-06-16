@@ -5,14 +5,17 @@
 // =============================================================================
 
 import { NextRequest, NextResponse } from "next/server";
-import { clearSessionCookie } from "@/lib/auth";
+import { COOKIE_NAME } from "@/lib/auth";
 
 export async function POST(_req: NextRequest) {
   try {
-    await clearSessionCookie();
-    return NextResponse.redirect(new URL("/auth/login", _req.url));
+    const response = NextResponse.redirect(new URL("/auth/login", _req.url));
+    response.cookies.delete(COOKIE_NAME);
+    return response;
   } catch (error) {
     console.error("[LOGOUT_ERROR]", error);
-    return NextResponse.redirect(new URL("/auth/login", _req.url));
+    const response = NextResponse.redirect(new URL("/auth/login", _req.url));
+    response.cookies.delete(COOKIE_NAME);
+    return response;
   }
 }
