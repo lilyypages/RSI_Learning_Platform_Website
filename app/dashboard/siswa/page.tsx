@@ -49,6 +49,7 @@ export default async function SiswaDashboardPage() {
     where: { user: { id: session.userId } },
     select: {
       id: true,
+      classId: true,
       totalPoints: true,
       currentStreak: true,
       livesRemaining: true,
@@ -104,8 +105,12 @@ export default async function SiswaDashboardPage() {
 
   // Rank: berapa siswa dengan total_points lebih tinggi + 1
   const rank = await db.student.count({
-    where: { totalPoints: { gt: student.totalPoints ?? 0 } },
+    where: { 
+      classId: student.classId,
+      totalPoints: { gt: student.totalPoints ?? 0 } },
   });
+
+  const rankDisplay = (student.totalPoints ?? 0) > 0 ? `#${rank + 1}` : "0";
 
   const firstName = student.user.name.split(" ")[0];
 
@@ -175,7 +180,7 @@ export default async function SiswaDashboardPage() {
           },
           {
             label: "Peringkat",
-            value: `#${rank + 1}`,
+            value: rankDisplay,
             icon: Trophy,
             colorIcon: "text-purple-600",
             colorBg: "bg-purple-50",

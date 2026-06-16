@@ -19,6 +19,7 @@ export default function KelolaMapelGuruPage({ params }: { params: Promise<{ id: 
   const [availableAssignments, setAvailableAssignments] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [savedCount, setSavedCount] = useState<number | null>(null);
+  const [isHomeroom, setIsHomeroom] = useState(false);
 
   useEffect(() => {
     async function loadDataMapel() {
@@ -32,6 +33,7 @@ export default function KelolaMapelGuruPage({ params }: { params: Promise<{ id: 
         setAvailableAssignments(json.availableAssignments);
         setSelectedIds(json.assignedSubjects.map((sub: any) => sub.id));
         setSavedCount(json.assignedSubjects.length);
+        setIsHomeroom(json.teacher.isHomeroom);
       } catch (err: any) {
         setError(err.message || "Gagal menyambung ke server.");
       } finally {
@@ -139,10 +141,17 @@ export default function KelolaMapelGuruPage({ params }: { params: Promise<{ id: 
             <div className="border-t pt-3 space-y-2 text-xs font-semibold text-slate-700">
               <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl">
                 <span className="text-slate-400">Wali Kelas:</span>
-                <span className="text-indigo-600 font-black">
-                  {teacher?.isHomeroom ? `✓ Kelas ${teacher.homeroomClassName}` : "✕ Bukan Wali"}
+                <span className={`text-xs font-black ${isHomeroom ? "text-indigo-600 font-black" : "text-slate-400"}`}>
+                  {isHomeroom ? "✓Aktif sebagai Wali Kelas" : "✕ Bukan Wali"}
                 </span>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsHomeroom(!isHomeroom)}
+                className={`w-10 h-5 rounded-full transition-colors relative ${isHomeroom ? "bg-indigo-600" : "bg-slate-300"}`}
+              >
+                <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${isHomeroom ? "translate-x-5" : "translate-x-0"}`} />
+              </button>
               <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl">
                 <span className="text-slate-400">Mapel Unik Terpilih:</span>
                 <span className="text-slate-800 font-black">{currentUniqueSubjectsCount} Mapel</span>
