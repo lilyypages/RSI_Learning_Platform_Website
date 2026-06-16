@@ -26,7 +26,7 @@ export interface SessionPayload {
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET ?? "fallback-dev-secret-CHANGE-IN-PRODUCTION"
 );
-const COOKIE_NAME = process.env.COOKIE_NAME ?? "rsi_session";
+export const COOKIE_NAME = process.env.COOKIE_NAME ?? "rsi_session";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? "7d";
 
 // Helper: convert "7d", "1h", "30m" → seconds

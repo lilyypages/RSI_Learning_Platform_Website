@@ -44,7 +44,14 @@ export async function GET(request: NextRequest) {
       take: 50,
       include: {
         material: {
-          select: { title: true },
+          select: {
+            title: true,
+            classSubject: {
+              select: {
+                subject: { select: { name: true, code: true } },
+              },
+            },
+          },
         },
       },
     });
@@ -53,6 +60,8 @@ export async function GET(request: NextRequest) {
       id: s.id,
       materialId: s.materialId,
       materialTitle: s.material?.title ?? "Unknown",
+      subjectName: s.material?.classSubject?.subject?.name ?? null,
+      subjectCode: s.material?.classSubject?.subject?.code ?? null,
       score: s.score ?? 0,
       correctCount: s.correctCount ?? 0,
       wrongCount: s.wrongCount ?? 0,

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { BookOpen, ArrowRight } from "lucide-react";
+import { BookOpen, ArrowRight, GraduationCap } from "lucide-react";
 
 const COLORS = [
   { bg: "bg-[#E8F5E9]", text: "text-[#2E7D32]", bar: "bg-[#4CAF50]", btn: "bg-[#4CAF50] hover:bg-[#2E7D32]" },
@@ -20,6 +20,7 @@ export default async function MapelPage() {
     select: {
       id: true,
       classId: true,
+      class: { select: { name: true } },
       progress: {
         select: {
           completionPercent: true,
@@ -44,6 +45,7 @@ export default async function MapelPage() {
       id: true,
       subject: { select: { name: true, code: true } },
       materials: { where: { isPublished: true }, select: { id: true } },
+      teacher: { select: { user: { select: { name: true } } } },
     },
   });
 
@@ -63,12 +65,22 @@ export default async function MapelPage() {
       completionPercent: prog?.completionPercent ?? 0,
       totalScore: prog?.totalScore ?? 0,
       adaptiveLevel: prog?.adaptiveLevel ?? "STANDARD",
+      teacherName: cs.teacher?.user?.name ?? null,
     };
   });
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <h1 className="text-2xl font-black text-[#2E7D32]">Materi Saya</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-black text-[#2E7D32]">Materi Saya</h1>
+          {student.class?.name && (
+            <p className="text-sm font-bold text-[#2E7D32]/60 mt-1 flex items-center gap-1">
+              <GraduationCap size={16} /> Kelas {student.class.name}
+            </p>
+          )}
+        </div>
+      </div>
 
       {merged.length === 0 ? (
         <div className="bg-white rounded-[24px] border-2 border-dashed border-slate-200 p-12 text-center">
@@ -87,6 +99,11 @@ export default async function MapelPage() {
                   </span>
                   <span className="text-xs text-slate-400">{cs.totalMateri} materi</span>
                 </div>
+                {cs.teacherName && (
+                  <p className="text-xs text-[#2E7D32]/50 mb-3 font-medium">
+                    Guru: {cs.teacherName}
+                  </p>
+                )}
                 <div className="space-y-2 mb-5">
                   <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
                     <span className="text-slate-400">Progres</span>

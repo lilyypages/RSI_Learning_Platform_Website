@@ -92,12 +92,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ambil soal pertama
+    // Adaptive level berdasarkan progres per kelas (classSubject)
+    const existingProgress = await db.studentProgress.findFirst({
+      where: { studentId: student.id, classSubjectId: material.classSubjectId },
+    });
+
+    const startLevel = existingProgress?.adaptiveLevel === "ADVANCED" ? "HARD"
+      : existingProgress?.adaptiveLevel === "REMEDIAL" ? "EASY"
+      : "MEDIUM";
 
     let question = await db.question.findFirst({
       where: {
         materialId,
-        difficulty: "MEDIUM",
+        difficulty: startLevel,
       },
       select: {
         id: true,
@@ -152,7 +159,7 @@ export async function POST(req: NextRequest) {
       success: true,
       sessionId: quizSession.id,
       question,
-      currentLevel: "MEDIUM",
+      currentLevel: startLevel,
       lives: student.livesRemaining ?? 3,
       streak: 0,
     });

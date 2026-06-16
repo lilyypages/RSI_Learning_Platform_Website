@@ -54,16 +54,15 @@ export default function KepsekLayout({ children }: { children: React.ReactNode }
 
         {/* Footer Sidebar */}
         <div className="p-8 border-t border-[#E8F5E9]/10 shrink-0">
-          <button
-            onClick={async () => {
-              await fetch("/api/auth/logout", { method: "POST" });
-              window.location.href = "/auth/login";
-            }}
-            className="flex items-center gap-3 text-[#A5D6A7] hover:text-[#E53935] transition-colors text-sm font-black group w-full text-left"
-          >
-            <LogOut size={18} className="group-hover:-translate-x-1 transition-transform shrink-0" />
-            <span>Keluar Sistem</span>
-          </button>
+          <form action="/api/auth/logout" method="POST">
+            <button
+              type="submit"
+              className="flex items-center gap-3 text-[#A5D6A7] hover:text-[#E53935] transition-colors text-sm font-black group w-full text-left"
+            >
+              <LogOut size={18} className="group-hover:-translate-x-1 transition-transform shrink-0" />
+              <span>Keluar Sistem</span>
+            </button>
+          </form>
         </div>
       </aside>
 

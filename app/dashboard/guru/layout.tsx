@@ -152,16 +152,15 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
           </Link>
 
           {/* LOGOUT */}
-          <button
-            onClick={async () => {
-              await fetch("/api/auth/logout", { method: "POST" });
-              window.location.href = "/auth/login";
-            }}
-            className="w-full flex items-center justify-center space-x-2 text-[#E53935] hover:bg-[#E53935] hover:text-white p-3 rounded-[16px] transition-all"
-          >
-            <LogOut size={18} />
-            <span className="font-bold">Logout</span>
-          </button>
+          <form action="/api/auth/logout" method="POST" className="w-full">
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center space-x-2 text-[#E53935] hover:bg-[#E53935] hover:text-white p-3 rounded-[16px] transition-all"
+            >
+              <LogOut size={18} />
+              <span className="font-bold">Logout</span>
+            </button>
+          </form>
         </div>
       </aside>
 

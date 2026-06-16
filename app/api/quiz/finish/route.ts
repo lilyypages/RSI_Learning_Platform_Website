@@ -32,6 +32,9 @@ export async function POST(req: NextRequest) {
 
     const resultLevel = scorePct >= 85 ? "EXCELLENT" : scorePct >= 75 ? "PASSED" : "FAILED";
 
+    // Adaptive level per classSubject: simpan level berdasarkan performa
+    const adaptiveLevel = scorePct >= 85 ? "ADVANCED" : scorePct >= 60 ? "STANDARD" : "REMEDIAL";
+
     await db.quizSession.update({
       where: { id: sessionId },
       data: { finishedAt: new Date(), score: scorePct, resultLevel },
@@ -55,11 +58,11 @@ export async function POST(req: NextRequest) {
     if (existingProgress) {
       await db.studentProgress.update({
         where: { id: existingProgress.id },
-        data: { totalScore: Math.max(existingProgress.totalScore ?? 0, scorePct), completionPercent, lastActivity: new Date() },
+        data: { totalScore: Math.max(existingProgress.totalScore ?? 0, scorePct), completionPercent, adaptiveLevel, lastActivity: new Date() },
       });
     } else {
       await db.studentProgress.create({
-        data: { studentId: student.id, classSubjectId: quizSession.classSubjectId, completionPercent, totalScore: scorePct, lastActivity: new Date() },
+        data: { studentId: student.id, classSubjectId: quizSession.classSubjectId, completionPercent, totalScore: scorePct, adaptiveLevel, lastActivity: new Date() },
       });
     }
 
