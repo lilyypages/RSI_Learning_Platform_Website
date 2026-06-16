@@ -48,7 +48,15 @@ export async function GET(req: NextRequest) {
           students: {
             include: {
               user:     { select: { name: true } },
-              progress: { include: { classSubject: { include: { subject: { select: { name: true } } } } } },
+              progress: {
+                include: {
+                  classSubject: {
+                    include: {
+                      subject: { select: { name: true, code: true } },
+                    },
+                  },
+                },
+              },
               quizSessions: { orderBy: { startedAt: "desc" }, take: 10 },
             },
           },
@@ -59,16 +67,18 @@ export async function GET(req: NextRequest) {
       const student = parent.students[0];
       return NextResponse.json({
         child: {
-          name:           student.user.name,
-          nis:            student.nis,
-          birthdate:      student.birthdate,
-          totalPoints:    student.totalPoints ?? 0,
-          currentStreak:  student.currentStreak ?? 0,
-          livesRemaining: student.livesRemaining ?? 3,
+          id:              student.id,
+          name:            student.user.name,
+          nis:             student.nis,
+          birthdate:       student.birthdate,
+          totalPoints:     student.totalPoints ?? 0,
+          currentStreak:   student.currentStreak ?? 0,
+          livesRemaining:  student.livesRemaining ?? 3,
         },
         progress: student.progress.map((p) => ({
+          classSubjectId:    p.classSubjectId,
           subjectName:       p.classSubject.subject.name,
-          subjectCode:       p.classSubject.subject.name,
+          subjectCode:       p.classSubject.subject.code,
           totalScore:        p.totalScore ?? 0,
           completionPercent: p.completionPercent ?? 0,
           adaptiveLevel:     p.adaptiveLevel,

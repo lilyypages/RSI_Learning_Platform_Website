@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookOpen, TrendingUp, MessageCircle, Bell, Star, AlertCircle, Clock } from "lucide-react";
 
 type StudentProgress = {
+  classSubjectId?: string;
   subjectName: string;
   subjectCode: string;
   totalScore: number;
@@ -13,6 +14,7 @@ type StudentProgress = {
 };
 
 type ChildInfo = {
+  id: string;
   name: string;
   nis: string;
   birthdate: string | null;

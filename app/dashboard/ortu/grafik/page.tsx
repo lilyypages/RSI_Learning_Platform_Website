@@ -3,8 +3,10 @@ import React, { useEffect, useState } from "react";
 import { TrendingUp, Calendar, Target, Award } from "lucide-react";
 
 type ProgressItem = {
+  classSubjectId?: string;
   subject: string;
-  subjectName?: string; // Fallback jika key API menggunakan subjectName
+  subjectName?: string;
+  subjectCode?: string;
   totalScore: number;
   completionPercent: number;
   adaptiveLevel: string;
