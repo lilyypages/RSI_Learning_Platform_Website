@@ -76,7 +76,7 @@ export default function DetailSiswaPage({ params }: { params: Promise<PageParams
             <ArrowLeft size={16} className="transform group-hover:-translate-x-1 transition-transform" />
             Kembali ke Manajemen Siswa
           </Link>
-          <h1 className="text-3xl font-black text-slate-800 mt-1">Ikhtisar Profil Siswa</h1>
+          <h1 className="text-3xl font-black text-slate-800 mt-1">Ringkasan Profil Siswa</h1>
         </div>
         
         <div className="flex items-center gap-2 w-full sm:w-auto">

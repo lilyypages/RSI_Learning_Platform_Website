@@ -139,10 +139,6 @@ export default function TambahSiswaPage() {
               <p className="text-sm text-slate-500">No. HP: {successData.parent?.phone}</p>
             </div>
           </div>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 text-sm">
-            📌 Kedua akun di atas diwajibkan untuk **mengganti password** saat pertama kali masuk ke sistem (*mustChangePassword* diaktifkan).
-          </div>
         </div>
 
         <div className="flex gap-3">
