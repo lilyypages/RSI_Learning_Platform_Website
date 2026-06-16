@@ -1,3 +1,4 @@
+# Netlify config fix
 [build]
   command = "npx prisma generate && npm run build"
 
