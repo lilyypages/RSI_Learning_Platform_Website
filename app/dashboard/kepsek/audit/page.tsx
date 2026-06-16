@@ -50,8 +50,8 @@ export default function SecurityAudit() {
           parents:  users.filter(u => u.role === "PARENT").length,
         });
       }
-    } catch {}
-    finally { setLoading(false); }
+    } catch {
+    } finally { setLoading(false); }
   }
 
   const visible = logs.filter(l =>
@@ -61,8 +61,11 @@ export default function SecurityAudit() {
     (l.userId ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
+  // Fungsi pengecekan anomali sederhana
+  const failedLogins = logs.filter(l => l.action === "LOGIN_FAIL").length;
+
   return (
-    <div className="max-w-5xl space-y-8">
+    <div className="max-w-6xl space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -83,10 +86,10 @@ export default function SecurityAudit() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Log table */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm space-y-6">
-          <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Kolom Log Table (Diperluas jadi col-span-3) */}
+        <div className="lg:col-span-3 bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm min-h-[600px] flex flex-col">
+          <div className="flex items-center justify-between mb-8">
             <h3 className="font-black text-slate-800 flex items-center space-x-2 text-lg">
               <Activity className="text-indigo-600" size={20} />
               <span>Aktivitas Sistem</span>
@@ -104,9 +107,17 @@ export default function SecurityAudit() {
           </div>
 
           {loading ? (
-            <p className="text-slate-400 font-medium text-center py-8">Memuat log...</p>
+            <div className="flex-1 flex items-center justify-center text-slate-400 font-bold">
+              Memeriksa integritas log...
+            </div>
           ) : visible.length === 0 ? (
-            <p className="text-slate-400 font-medium text-center py-8">Belum ada aktivitas tercatat.</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
+                <ShieldCheck size={40} className="text-slate-300" />
+              </div>
+              <p className="text-slate-400 font-bold">Sistem Bersih</p>
+              <p className="text-xs text-slate-400 max-w-xs">Tidak ada aktivitas mencurigakan atau log terbaru yang ditemukan.</p>
+            </div>
           ) : (
             <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
               {visible.map(log => (
@@ -136,10 +147,17 @@ export default function SecurityAudit() {
           )}
         </div>
 
-        {/* Stats panel */}
-        <div className="bg-slate-900 p-8 rounded-[40px] shadow-xl text-white flex flex-col justify-between">
-          <div>
-            <h4 className="font-black text-emerald-400 uppercase tracking-widest text-[10px] mb-4">Statistik Keamanan</h4>
+        {/* Sidebar Stats & Info (col-span-1) */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-slate-900 p-8 rounded-[40px] shadow-xl text-white">
+            <h4 className="font-black text-emerald-400 uppercase tracking-widest text-[10px] mb-6">Security Status</h4>
+            
+            {/* Indikator status anomali */}
+            <div className={`p-4 rounded-2xl mb-6 ${failedLogins > 5 ? 'bg-rose-900/50 text-rose-200' : 'bg-emerald-900/50 text-emerald-200'}`}>
+              <p className="text-[10px] font-bold opacity-70 uppercase">Anomali Terdeteksi</p>
+              <p className="text-2xl font-black">{failedLogins} Percobaan Gagal</p>
+            </div>
+
             <div className="space-y-4">
               {[
                 { label: "Total Guru",  val: counts.teachers },
@@ -153,17 +171,26 @@ export default function SecurityAudit() {
                 </div>
               ))}
             </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-white/5">
-            <div className="flex items-center space-x-2 text-emerald-400">
-              <ShieldCheck size={16} />
-              <span className="text-[10px] font-black uppercase tracking-widest">bcrypt cost 12 Aktif</span>
+
+            <div className="mt-8 pt-6 border-t border-white/5">
+              <div className="flex items-center space-x-2 text-emerald-400">
+                <ShieldCheck size={16} />
+                <span className="text-[10px] font-black uppercase tracking-widest">bcrypt cost 12 Aktif</span>
+              </div>
             </div>
+          </div>
+
+          {/* Kartu Info Keamanan Tambahan */}
+          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tips Keamanan</p>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              Pastikan sesi admin dibatasi dan lakukan backup database secara berkala untuk menjaga integritas data.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Detail modal */}
+      {/* Detail Modal */}
       {selected && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
@@ -192,9 +219,9 @@ export default function SecurityAudit() {
                 </div>
               ))}
               {selected.detail && (
-                <div>
+                <div className="pt-2">
                   <p className="font-bold text-slate-400 mb-1">Payload</p>
-                  <pre className="bg-slate-50 rounded-xl p-4 text-xs text-slate-600 overflow-auto max-h-40">
+                  <pre className="bg-slate-50 rounded-xl p-4 text-xs text-slate-600 overflow-auto max-h-40 font-mono">
                     {JSON.stringify(selected.detail, null, 2)}
                   </pre>
                 </div>

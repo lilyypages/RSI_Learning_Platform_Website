@@ -88,24 +88,21 @@ export async function GET(req: NextRequest) {
     }
 
     // PRINCIPAL: overview sekolah
-    if (session.role === "PRINCIPAL") {
-      const [totalStudents, totalTeachers, progressData] = await Promise.all([
-        db.student.count(),
-        db.teacher.count(),
-        db.studentProgress.findMany({
-          include: {
-            student:      { include: { class: { select: { name: true } } } },
-            classSubject: { include: { subject: { select: { name: true } } } },
-          },
-        }),
-      ]);
+if (session.role === "PRINCIPAL") {
+  const [totalStudents, totalTeachers, avgData] = await Promise.all([
+    db.student.count(),
+    db.teacher.count(),
+    db.studentProgress.aggregate({
+      _avg: { totalScore: true }
+    })
+  ]);
 
-      const schoolAvgScore = progressData.length > 0
-        ? Math.round(progressData.reduce((sum, p) => sum + (p.totalScore ?? 0), 0) / progressData.length)
-        : 0;
-
-      return NextResponse.json({ totalStudents, totalTeachers, schoolAvgScore });
-    }
+  return NextResponse.json({ 
+    totalStudents, 
+    totalTeachers, 
+    schoolAvgScore: Math.round(avgData._avg.totalScore || 0) 
+  });
+}
 
     // STUDENT: progress sendiri
     const student = await db.student.findUnique({

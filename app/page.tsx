@@ -418,7 +418,7 @@ export default function Home() {
         <h2>Siap Mulai Belajar Bersama SIPANDA? 🚀</h2>
         <p>Bergabung dengan ribuan siswa yang sudah belajar lebih seru, lebih pintar, dan lebih bersemangat setiap harinya!</p>
         <div className="cta-btns">
-          <a href="#" className="btn-white">🐼 Masuk Sekarang</a>
+          <a href="/auth/login" className="btn-white">🐼 Masuk Sekarang</a>
           <a href="#tentang" className="btn-outline-white">Pelajari Lebih Lanjut</a>
         </div>
         <p style={{ marginTop: '1.5rem', fontSize: '0.82rem', opacity: 0.6 }}>Akun SIPANDA diberikan oleh pihak sekolah. Hubungi sekolahmu untuk info lebih lanjut.</p>
