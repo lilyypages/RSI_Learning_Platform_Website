@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Book, ChevronRight, GraduationCap } from "lucide-react";
+import { Book, ChevronRight, GraduationCap } from "lucide-react";
 
 type ClassSubject = {
   id: string;
@@ -43,11 +43,6 @@ export default function KelolaMapel() {
           <h1 className="text-3xl font-black text-[#2E7D32] tracking-tight">Kurikulum Kelas 📚</h1>
           <p className="text-[#2E7D32]/70 font-medium">Kelola materi dan kuis adaptif untuk setiap mata pelajaran.</p>
         </div>
-        
-        <button className="bg-[#4CAF50] text-white px-6 py-4 rounded-[24px] flex items-center space-x-3 font-black shadow-[0_8px_32px_rgba(76,175,80,0.2)] hover:bg-[#2E7D32] transition-all">
-          <Plus size={20} strokeWidth={3} />
-          <span>Mapel Baru</span>
-        </button>
       </div>
 
       {loading ? (
