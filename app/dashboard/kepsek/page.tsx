@@ -3,26 +3,30 @@ import React, { useEffect, useState } from "react";
 import { TrendingUp, Users, BookCheck, AlertCircle, BarChart3, Info } from "lucide-react";
 
 export default function KepsekDashboard() {
-  const [data, setData] = useState({ totalStudents: 0, totalTeachers: 0, schoolAvgScore: 0 });
+  const [data, setData] = useState({ totalStudents: 0, totalTeachers: 0, schoolAvgScore: 0, classAverages: [] });
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        // Panggil API yang sudah kita optimasi dengan aggregate
         const [progressRes, studentsRes] = await Promise.allSettled([
           fetch("/api/progress?role=PRINCIPAL"),
           fetch("/api/students?includeProgress=true")
         ]);
 
         if (progressRes.status === "fulfilled" && progressRes.value.ok) {
-          setData(await progressRes.value.json());
+          const json = await progressRes.value.json();
+          setData({
+            totalStudents: json.totalStudents ?? 0,
+            totalTeachers: json.totalTeachers ?? 0,
+            schoolAvgScore: json.schoolAvgScore ?? 0,
+            classAverages: json.classAverages ?? [],
+          });
         }
         
         if (studentsRes.status === "fulfilled" && studentsRes.value.ok) {
           const res = await studentsRes.value.json();
-          // Logika pemrosesan data kelas tetap di sini
           setClasses(res.students || []); 
         }
       } catch (err) {
@@ -67,9 +71,23 @@ export default function KepsekDashboard() {
           
           {loading ? (
              <div className="space-y-4 animate-pulse">{[1,2,3,4].map(i => <div key={i} className="h-10 bg-gray-50 rounded-xl" />)}</div>
-          ) : classes.length > 0 ? (
-            <div className="space-y-4">
-              {/* Mapping kelas Anda */}
+          ) : data.classAverages.length > 0 ? (
+            <div className="space-y-5">
+              {data.classAverages.map((c: { className: string; avgScore: number }) => {
+                const barColor = c.avgScore >= 85 ? "from-[#4CAF50] to-[#2E7D32]" : c.avgScore >= 75 ? "from-[#00897B] to-[#004D40]" : "from-[#FF8F00] to-[#E65100]";
+                return (
+                  <div key={c.className} className="flex items-center gap-4">
+                    <span className="w-24 text-sm font-black text-[#2E7D32] truncate" title={c.className}>{c.className}</span>
+                    <div className="flex-1 bg-[#E8F5E9] rounded-full h-8 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-700`}
+                        style={{ width: `${Math.min(c.avgScore, 100)}%` }}
+                      />
+                    </div>
+                    <span className="w-14 text-right text-sm font-black text-[#2E7D32]">{c.avgScore}%</span>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-center">

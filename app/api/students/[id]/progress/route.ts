@@ -53,6 +53,7 @@ export async function GET(
       where: { id },
       select: {
         id: true,
+        userId: true,
         totalPoints: true,
         user: { select: { name: true } },
         class: { select: { name: true } }

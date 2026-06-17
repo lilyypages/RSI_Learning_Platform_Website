@@ -87,7 +87,7 @@ const rows: StudentRow[] = json.students.map((s: any) => {
 
   return {
     monitoringId: s.id,
-    userId: s.userId, // 🌟 WAJIB DITAMBAHKAN AGAR LINK CHAT TIDAK UNDEFINED!
+    userId: s.user.id,
     name: s.user?.name ?? "Tanpa Nama", 
     avg,
     status: getStatus(avg),

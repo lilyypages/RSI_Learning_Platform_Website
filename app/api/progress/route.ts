@@ -89,18 +89,43 @@ export async function GET(req: NextRequest) {
 
     // PRINCIPAL: overview sekolah
 if (session.role === "PRINCIPAL") {
-  const [totalStudents, totalTeachers, avgData] = await Promise.all([
+  const [totalStudents, totalTeachers, avgData, allProgress] = await Promise.all([
     db.student.count(),
     db.teacher.count(),
     db.studentProgress.aggregate({
       _avg: { totalScore: true }
-    })
+    }),
+    db.studentProgress.findMany({
+      select: {
+        totalScore: true,
+        student: {
+          select: {
+            class: { select: { id: true, name: true } }
+          }
+        }
+      }
+    }),
   ]);
+
+  // Group by class, calculate average
+  const classMap: Record<string, { total: number; count: number }> = {};
+  for (const p of allProgress) {
+    const cls = p.student.class;
+    const key = cls ? cls.name : "Tanpa Kelas";
+    if (!classMap[key]) classMap[key] = { total: 0, count: 0 };
+    classMap[key].total += (p.totalScore ?? 0);
+    classMap[key].count += 1;
+  }
+  const classAverages = Object.entries(classMap).map(([name, data]) => ({
+    className: name,
+    avgScore: data.count > 0 ? Math.round(data.total / data.count) : 0,
+  }));
 
   return NextResponse.json({ 
     totalStudents, 
     totalTeachers, 
-    schoolAvgScore: Math.round(avgData._avg.totalScore || 0) 
+    schoolAvgScore: Math.round(avgData._avg.totalScore || 0),
+    classAverages,
   });
 }
 
