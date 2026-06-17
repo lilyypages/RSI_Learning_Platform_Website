@@ -95,14 +95,55 @@ export async function POST(req: NextRequest) {
             classSubjectId: classSubjectId,
             teacherId:      teacher.id,
             weekStart:      weekStart,
-            avgScore:       0, // Nanti bisa di-update via cronjob otomatis atau disinkronkan langsung
+            avgScore:       0,
             completionRate: 0,
-            recommendation: gabunganCatatan, // 🌟 Masuk ke dashboard ortu secara personal!
+            recommendation: gabunganCatatan,
             kkm_achieved:   false,
           },
         });
       })
     );
+
+    // 🔁 Kirim pesan juga ke inbox masing-masing orang tua biar sinkron
+    for (const item of laporanSiswa) {
+      try {
+        const student = await db.student.findUnique({
+          where: { id: item.studentId },
+          include: {
+            user:   { select: { name: true } },
+            parent: { include: { user: { select: { id: true, name: true } } } },
+          },
+        });
+
+        const parentUser = student?.parent?.user;
+        if (!parentUser?.id) continue;
+
+        const combined = item.catatanIndividu
+          ? `📋 [Catatan Umum Kelas]: ${catatanKelas || "-"}\n📝 [Catatan Khusus ${student.user.name}]: ${item.catatanIndividu}`
+          : `📋 [Catatan Umum Kelas]: ${catatanKelas || "-"}`;
+
+        await db.message.create({
+          data: {
+            senderId:   session.userId,
+            receiverId: parentUser.id,
+            content:    combined,
+            isRead:     false,
+          },
+        });
+
+        await db.notification.create({
+          data: {
+            userId:    parentUser.id,
+            title:     `📋 Laporan Mingguan untuk ${student.user.name}`,
+            body:      combined.length > 120 ? combined.slice(0, 120) + "..." : combined,
+            notifType: "MESSAGE",
+            isRead:    false,
+          },
+        });
+      } catch (e) {
+        console.error(`[REPORTS_PARENT_NOTIF_ERROR] studentId=${item.studentId}`, e);
+      }
+    }
 
     return NextResponse.json(
       {

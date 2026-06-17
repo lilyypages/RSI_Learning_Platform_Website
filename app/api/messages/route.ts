@@ -83,6 +83,41 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // 🔁 Auto-forward ke parent kalo TEACHER ngirim ke STUDENT
+    if (session.role === "TEACHER" && receiver.role === "STUDENT") {
+      try {
+        const targetStudent = await db.student.findUnique({
+          where: { userId: receiverId },
+          include: {
+            user:   { select: { id: true, name: true } },
+            parent: { include: { user: { select: { id: true } } } },
+          },
+        });
+        if (targetStudent?.parent?.user.id) {
+          const parentUserId = targetStudent.parent.user.id;
+          await db.message.create({
+            data: {
+              senderId:   session.userId,
+              receiverId: parentUserId,
+              content:    `💬 [Pesan untuk ${targetStudent.user.name}]: ${content}`,
+              isRead:     false,
+            },
+          });
+          await db.notification.create({
+            data: {
+              userId:    parentUserId,
+              title:     `Pesan dari Guru untuk ${targetStudent.user.name}`,
+              body:      content.length > 100 ? content.slice(0, 100) + "..." : content,
+              notifType: "MESSAGE",
+              isRead:    false,
+            },
+          });
+        }
+      } catch (e) {
+        console.error("[MESSAGES_PARENT_FORWARD_ERROR]", e);
+      }
+    }
+
     return NextResponse.json(
       { success: true, message: "Pesan berhasil dikirim", data: message },
       { status: 201 }

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { LayoutDashboard, BookOpen, History, Bell, Flame, LogOut, MessageSquare } from "lucide-react";
+import { LayoutDashboard, BookOpen, History, Bell, Flame, LogOut } from "lucide-react";
 
 export default async function SiswaLayout({
   children,
@@ -125,13 +125,6 @@ export default async function SiswaLayout({
             <History size={18} />
             Riwayat Quiz
           </Link>
-          <Link
-            href="/dashboard/siswa/pesan"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-[20px] text-[#2E7D32]/70 hover:bg-[#E8F5E9] hover:text-[#2E7D32] font-black text-sm transition-all"
-          >
-            <MessageSquare size={18} />
-            Pesan Guru
-          </Link>
         </nav>
 
         {/* Footer sidebar: poin + logout */}
@@ -203,10 +196,6 @@ export default async function SiswaLayout({
           <Link href="/dashboard/siswa/quiz" className="flex flex-col items-center gap-0.5 text-[#2E7D32]/60 hover:text-[#2E7D32]">
             <History size={20} />
             <span className="text-[9px] font-black">Quiz</span>
-          </Link>
-          <Link href="/dashboard/siswa/pesan" className="flex flex-col items-center gap-0.5 text-[#2E7D32]/60 hover:text-[#2E7D32]">
-            <MessageSquare size={20} />
-            <span className="text-[9px] font-black">Pesan</span>
           </Link>
           <form action="/api/auth/logout" method="POST">
             <button type="submit" className="flex flex-col items-center gap-0.5 text-[#2E7D32]/60 hover:text-[#E53935]">

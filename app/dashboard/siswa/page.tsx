@@ -392,22 +392,6 @@ export default async function SiswaDashboardPage() {
         </div>
 
         {/* Help banner */}
-        <div className="lg:col-span-2 bg-white border-2 border-dashed border-slate-200 rounded-2xl p-5 flex flex-col justify-between">
-          <div>
-            <h4 className="text-base font-black text-slate-800 mb-1">
-              Butuh Bantuan? 🙋‍♀️
-            </h4>
-            <p className="text-slate-500 text-sm leading-relaxed">
-              Jangan ragu tanya Guru kalau ada materi yang bingung ya,{" "}
-              {firstName}!
-            </p>
-          </div>
-          <Link href="/dashboard/siswa/pesan" className="mt-4 block">
-            <button className="w-full bg-white border-2 border-slate-800 text-slate-800 py-2.5 rounded-xl font-black text-sm hover:bg-slate-800 hover:text-white transition-all">
-              Hubungi Guru
-            </button>
-          </Link>
-        </div>
       </div>
     </div>
   );
