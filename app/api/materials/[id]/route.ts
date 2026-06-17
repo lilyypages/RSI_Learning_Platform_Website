@@ -88,41 +88,23 @@ export async function DELETE(
       });
       const videoIds = videos.map(v => v.id);
 
-      if (videoIds.length > 0) {
-        // Hapus log tontonan siswa terlebih dahulu (aman jika model dinamis)
-        if ((tx as any).videoWatch) {
-          await (tx as any).videoWatch.deleteMany({ where: { videoId: { in: videoIds } } });
-        } else if ((tx as any).videoWatches) {
-          await (tx as any).videoWatches.deleteMany({ where: { videoId: { in: videoIds } } });
-        }
-        
-        // Hapus data video utama
-        await tx.video.deleteMany({ where: { materialId: id } });
-      }
+      // Hapus log tontonan siswa
+      await tx.videoWatch.deleteMany({ where: { video: { materialId: id } } }).catch(() => {});
+      
+      // Hapus video
+      await tx.video.deleteMany({ where: { materialId: id } });
 
-      // 2. Ambil semua ID Soal (Menggunakan model tunggal 'question' 🌟 sesuai API-mu)
-      const questions = await tx.question.findMany({
-        where: { materialId: id },
-        select: { id: true }
-      });
-      const questionIds = questions.map(q => q.id);
+      // 2. Hapus sesi quiz & jawaban siswa (QuizSession → cascade QuizAnswer)
+      await tx.quizSession.deleteMany({ where: { materialId: id } }).catch(() => {});
 
-      if (questionIds.length > 0) {
-        // Hapus rekam jejak jawaban kuis siswa jika tabel relasinya tersedia
-        if ((tx as any).studentAnswer) {
-          await (tx as any).studentAnswer.deleteMany({ where: { questionId: { in: questionIds } } });
-        } else if ((tx as any).studentAnswers) {
-          await (tx as any).studentAnswers.deleteMany({ where: { questionId: { in: questionIds } } });
-        }
+      // 3. Hapus jawaban kuis yang masih refer ke Question (kalau QuizAnswer belum ke-cascade)
+      await tx.quizAnswer.deleteMany({ where: { question: { materialId: id } } }).catch(() => {});
 
-        // Hapus butir soal kuis di bawah naungan bab ini
-        await tx.question.deleteMany({ where: { materialId: id } });
-      }
+      // 4. Hapus soal
+      await tx.question.deleteMany({ where: { materialId: id } });
 
-      // 3. Langkah Terakhir: Hapus Bab Utama (Material)
-      await tx.material.delete({
-        where: { id: id },
-      });
+      // 5. Langkah Terakhir: Hapus Bab Utama (Material)
+      await tx.material.delete({ where: { id } });
     });
 
     return NextResponse.json({ success: true, message: "Bab beserta kuis dan video berhasil dihapus secara permanen!" });
