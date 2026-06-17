@@ -11,12 +11,10 @@ import {
   LogOut,
   LayoutDashboard,
   User,
-  Loader2,
 } from "lucide-react";
 
 import NotificationDropdown from "@/components/shared/NotificationDropdown";
 
-// Interface untuk menampung data dari database via API /api/profile
 interface TeacherProfileState {
   name: string;
   homeroomOf: string;
@@ -25,14 +23,12 @@ interface TeacherProfileState {
 
 export default function GuruLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  
-  // State untuk menyimpan data profile asli dari database
+
   const [profile, setProfile] = useState<TeacherProfileState>({
     name: "Memuat nama...",
     homeroomOf: "Memuat kelas...",
   });
 
-  // Fetch data profil saat layout dimuat
   useEffect(() => {
     async function getProfileData() {
       try {
@@ -41,7 +37,7 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
         if (data.success) {
           setProfile({
             name: data.name,
-            homeroomOf: data.homeroomOf, // Menghasilkan "Wali Kelas X" atau "Bukan Wali Kelas"
+            homeroomOf: data.homeroomOf,
             imageUrl: data.imageUrl,
           });
         }
@@ -57,21 +53,9 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   const menuItems = [
-    {
-      name: "Monitoring Siswa",
-      icon: Users,
-      href: "/dashboard/guru/monitoring",
-    },
-    {
-      name: "Kelola Mapel",
-      icon: BookOpen,
-      href: "/dashboard/guru/mapel",
-    },
-    {
-      name: "Laporan Mingguan",
-      icon: FileBarChart,
-      href: "/dashboard/guru/laporan",
-    },
+    { name: "Monitoring Siswa", icon: Users, href: "/dashboard/guru/monitoring" },
+    { name: "Kelola Mapel", icon: BookOpen, href: "/dashboard/guru/mapel" },
+    { name: "Laporan Mingguan", icon: FileBarChart, href: "/dashboard/guru/laporan" },
   ];
 
   const isActive = (href: string) => pathname.startsWith(href);
@@ -80,12 +64,11 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
     pathname.split("/").pop()?.replace("-", " ") ?? "dashboard";
 
   return (
-    <div className="flex min-h-screen bg-[#FFFBF0]">
+    <div className="flex min-h-screen bg-[#F4F9F4]">
 
       {/* SIDEBAR */}
-      <aside className="w-72 bg-white text-[#2E7D32] hidden md:flex flex-col fixed h-full shadow border-r border-[#E8F5E9]">
+      <aside className="w-72 bg-white text-[#2E7D32] hidden md:flex flex-col fixed h-full shadow-[4px_0_24px_rgba(0,0,0,0.08)] border-r border-[#E8F5E9]">
 
-        {/* HEADER SIDEBAR */}
         <div className="p-8">
           <div className="font-black text-2xl flex items-center space-x-3">
             <div className="w-10 h-10 bg-[#4CAF50] rounded-[16px] flex items-center justify-center text-white font-black">
@@ -94,43 +77,37 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
             <span>GURU PANEL</span>
           </div>
 
-          {/* SINKRONISASI KELAS WALI */}
           <div className="bg-[#E8F5E9] p-3 rounded-[20px] mt-6 w-full max-w-[220px]">
             <p className="text-[10px] uppercase tracking-widest text-[#2E7D32]/60 font-bold">
               Status Tugas
             </p>
-            {/* Ditambahkan 'truncate' agar jika teks kepanjangan tidak merusak lebar sidebar */}
             <p className="text-sm font-bold text-[#2E7D32] truncate" title={profile.homeroomOf}>
               {profile.homeroomOf}
             </p>
           </div>
         </div>
 
-        {/* MENU */}
         <nav className="flex-1 px-4 space-y-2">
           {menuItems.map((item) => (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center space-x-3 p-4 rounded-[20px] transition ${
+              className={`flex items-center space-x-3 p-4 rounded-[20px] transition-all font-black text-sm ${
                 isActive(item.href)
-                  ? "bg-[#4CAF50] text-white"
-                  : "hover:bg-[#E8F5E9] text-[#2E7D32]/70"
+                  ? "bg-[#4CAF50] text-white shadow-lg shadow-[#4CAF50]/30"
+                  : "hover:bg-[#E8F5E9] text-[#2E7D32]/70 hover:text-[#2E7D32]"
               }`}
             >
               <item.icon size={20} />
-              <span className="font-semibold">{item.name}</span>
+              <span>{item.name}</span>
             </Link>
           ))}
         </nav>
 
-        {/* PROFILE + LOGOUT (BOTTOM SECTION) */}
         <div className="p-4 mt-auto border-t border-[#E8F5E9] space-y-3">
-
-          {/* SINKRONISASI NAMA SISI KIRI BAWAH */}
           <Link
             href="/dashboard/guru/profile"
-            className="flex items-center space-x-3 p-3 rounded-[16px] hover:bg-[#E8F5E9] w-full min-w-0" // Ditambahkan min-w-0 agar flex child bisa truncate
+            className="flex items-center space-x-3 p-3 rounded-[20px] hover:bg-[#E8F5E9] w-full min-w-0 transition-all"
           >
             <div className="w-9 h-9 bg-[#4CAF50] rounded-full flex-shrink-0 flex items-center justify-center text-white overflow-hidden border border-[#E8F5E9]">
               {profile.imageUrl ? (
@@ -139,37 +116,31 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
                 <User size={16} />
               )}
             </div>
-
-            {/* Pembungkus teks harus diberi min-w-0 agar fungsi truncate di dalamnya bekerja */}
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-[#2E7D32] truncate" title={profile.name}>
+              <p className="text-sm font-black text-[#2E7D32] truncate" title={profile.name}>
                 {profile.name}
               </p>
-              <p className="text-[10px] text-[#2E7D32]/60 font-medium">
+              <p className="text-[10px] text-[#2E7D32]/60 font-bold">
                 Kelola Profile
               </p>
             </div>
           </Link>
 
-          {/* LOGOUT */}
           <form action="/api/auth/logout" method="POST" className="w-full">
             <button
               type="submit"
-              className="w-full flex items-center justify-center space-x-2 text-[#E53935] hover:bg-[#E53935] hover:text-white p-3 rounded-[16px] transition-all"
+              className="w-full flex items-center justify-center space-x-2 text-[#2E7D32]/50 hover:text-[#E53935] hover:bg-[#FFEBEE] p-3 rounded-[20px] transition-all font-black text-sm"
             >
               <LogOut size={18} />
-              <span className="font-bold">Logout</span>
+              <span>Logout</span>
             </button>
           </form>
         </div>
       </aside>
 
       {/* MAIN CONTENT */}
-{/* MAIN CONTENT */}
-      {/* 🌟 PERBAIKAN: Ditambahkan 'max-w-full' dan 'min-w-0' agar layout utama mengunci viewport */}
       <main className="flex-1 md:ml-72 flex flex-col min-h-screen max-w-full min-w-0 overflow-x-hidden">
 
-        {/* HEADER ATAS */}
         <header className="bg-white/80 backdrop-blur-md border-b border-[#E8F5E9] px-8 py-5 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center space-x-2 text-[#2E7D32]/60">
             <LayoutDashboard size={16} />
@@ -182,9 +153,8 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
             <NotificationDropdown />
             <div className="h-6 w-px bg-[#E8F5E9]" />
 
-            {/* SINKRONISASI NAMA HEADER KANAN ATAS */}
             <div className="text-right">
-              <p className="text-sm font-bold text-[#2E7D32]">
+              <p className="text-sm font-black text-[#2E7D32]">
                 {profile.name}
               </p>
               <p className="text-[10px] text-[#FF8F00] uppercase font-bold tracking-wider">
@@ -194,8 +164,6 @@ export default function GuruLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        {/* PAGE CONTENT */}
-        {/* 🌟 PERBAIKAN: Ditambahkan 'min-w-0' dan 'overflow-hidden' agar element anak (seperti tabel) tahu batas tepi layar */}
         <div className="p-8 max-w-7xl mx-auto w-full min-w-0 overflow-hidden">
           {children}
         </div>

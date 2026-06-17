@@ -14,7 +14,7 @@ export default function OrtuLayout({ children }: { children: React.ReactNode }) 
       .then(data => { if (data.success) setProfile(data); })
       .catch(() => {});
   }, []);
-  
+
   const menu = [
     { name: "Ringkasan Anak", icon: LayoutDashboard, href: "/dashboard/ortu" },
     { name: "Grafik Kemajuan", icon: LineChart, href: "/dashboard/ortu/grafik" },
@@ -36,7 +36,7 @@ export default function OrtuLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        <nav className="flex-1 p-6 space-y-2 mt-4">
+        <nav className="flex-1 p-6 space-y-2">
           {menu.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -58,7 +58,7 @@ export default function OrtuLayout({ children }: { children: React.ReactNode }) 
           <form action="/api/auth/logout" method="POST">
             <button
               type="submit"
-              className="flex items-center space-x-3 text-[#A5D6A7] hover:text-[#E53935] p-4 rounded-[24px] hover:bg-white/5 transition-all font-black text-sm w-full text-left"
+              className="flex items-center space-x-3 text-[#A5D6A7] hover:text-[#E53935] hover:bg-white/5 p-3 rounded-[20px] transition-all font-black text-sm w-full text-left"
             >
               <LogOut size={20} className="shrink-0" />
               <span>Keluar Sistem</span>
@@ -71,7 +71,7 @@ export default function OrtuLayout({ children }: { children: React.ReactNode }) 
       <main className="flex-1 md:ml-72 min-h-screen flex flex-col">
         <header className="bg-white/80 backdrop-blur-md border-b border-[#E8F5E9] px-10 py-5 flex justify-between items-center sticky top-0 z-10 shadow-sm">
           <h2 className="text-xl font-black text-[#2E7D32] tracking-tight">Parent Dashboard</h2>
-          
+
           <div className="flex items-center space-x-4">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-black text-[#2E7D32]">{profile?.name ?? "Memuat..."}</p>

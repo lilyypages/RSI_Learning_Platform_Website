@@ -11,13 +11,11 @@ export default async function SiswaLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 1. Cek sesi — middleware sudah guard, ini double-check di server
   const session = await getSession();
   if (!session || session.role !== "STUDENT") {
     redirect("/auth/login");
   }
 
-  // 2. Ambil data siswa dari DB (streak, lives, poin, nama)
   const student = await db.student.findFirst({
     where: { user: { id: session.userId } },
     select: {
@@ -42,7 +40,6 @@ export default async function SiswaLayout({
     .join("")
     .toUpperCase();
 
-  // Format tanggal Indonesia
   const today = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
@@ -51,9 +48,9 @@ export default async function SiswaLayout({
   });
 
   return (
-    <div className="flex min-h-screen bg-[#FFFBF0] font-sans">
+    <div className="flex min-h-screen bg-[#F4F9F4] font-sans">
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside className="w-72 bg-white border-r border-[#E8F5E9] flex flex-col hidden md:flex fixed h-full shadow-[0_8px_32px_rgba(0,0,0,0.10)]">
+      <aside className="w-72 bg-white border-r border-[#E8F5E9] flex flex-col hidden md:flex fixed h-full shadow-[4px_0_24px_rgba(0,0,0,0.08)]">
         {/* Logo */}
         <div className="px-6 pt-6 pb-5 border-b border-[#E8F5E9]">
           <div className="flex items-center gap-3">
@@ -64,7 +61,7 @@ export default async function SiswaLayout({
               <span className="text-lg font-black tracking-tighter text-[#2E7D32]">
                 SISWA
               </span>
-              <p className="text-[10px] text-[#2E7D32]/50 uppercase tracking-widest font-medium">
+              <p className="text-[10px] text-[#2E7D32]/50 uppercase tracking-widest font-bold">
                 SD RSI Learning
               </p>
             </div>
@@ -87,14 +84,13 @@ export default async function SiswaLayout({
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-[#2E7D32] truncate">
+              <p className="text-sm font-black text-[#2E7D32] truncate">
                 {student.user.name}
               </p>
-              <p className="text-[11px] text-[#2E7D32]/60">Siswa{student.class?.name ? ` • Kelas ${student.class.name}` : ""}</p>
+              <p className="text-[11px] text-[#2E7D32]/60 font-bold">Siswa{student.class?.name ? ` • Kelas ${student.class.name}` : ""}</p>
             </div>
           </div>
 
-          {/* Streak & Lives badges */}
           <div className="flex gap-2 mt-3">
             <span className="flex items-center gap-1 text-[11px] font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
               <Flame size={12} className="fill-orange-400 text-orange-400" />
@@ -110,28 +106,28 @@ export default async function SiswaLayout({
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
           <Link
             href="/dashboard/siswa"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-[24px] text-white bg-[#4CAF50] font-semibold text-sm transition-all shadow-[0_4px_12px_rgba(76,175,80,0.2)]"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-[20px] text-white bg-[#4CAF50] font-black text-sm transition-all shadow-lg shadow-[#4CAF50]/30"
           >
             <LayoutDashboard size={18} />
             Beranda
           </Link>
           <Link
             href="/dashboard/siswa/mapel"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-[24px] text-[#2E7D32]/70 hover:bg-[#E8F5E9] hover:text-[#2E7D32] font-medium text-sm transition-all"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-[20px] text-[#2E7D32]/70 hover:bg-[#E8F5E9] hover:text-[#2E7D32] font-black text-sm transition-all"
           >
             <BookOpen size={18} />
             Materi Saya
           </Link>
           <Link
             href="/dashboard/siswa/quiz"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-[24px] text-[#2E7D32]/70 hover:bg-[#E8F5E9] hover:text-[#2E7D32] font-medium text-sm transition-all"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-[20px] text-[#2E7D32]/70 hover:bg-[#E8F5E9] hover:text-[#2E7D32] font-black text-sm transition-all"
           >
             <History size={18} />
             Riwayat Quiz
           </Link>
           <Link
             href="/dashboard/siswa/pesan"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-[24px] text-[#2E7D32]/70 hover:bg-[#E8F5E9] hover:text-[#2E7D32] font-medium text-sm transition-all"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-[20px] text-[#2E7D32]/70 hover:bg-[#E8F5E9] hover:text-[#2E7D32] font-black text-sm transition-all"
           >
             <MessageSquare size={18} />
             Pesan Guru
@@ -146,14 +142,14 @@ export default async function SiswaLayout({
             </p>
             <p className="text-2xl font-black text-[#2E7D32]">
               {(student.totalPoints ?? 0).toLocaleString("id-ID")}
-              <span className="text-sm font-medium text-[#4CAF50] ml-1">pts</span>
+              <span className="text-sm font-bold text-[#4CAF50] ml-1">pts</span>
             </p>
           </div>
 
           <form action="/api/auth/logout" method="POST">
             <button
               type="submit"
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-[24px] text-[#2E7D32]/50 hover:text-[#E53935] hover:bg-rose-50 text-sm font-medium transition-all"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-[20px] text-[#2E7D32]/50 hover:text-[#E53935] hover:bg-[#FFEBEE] text-sm font-black transition-all"
             >
               <LogOut size={16} />
               Keluar
@@ -167,8 +163,8 @@ export default async function SiswaLayout({
         {/* Topbar */}
         <header className="bg-white/80 backdrop-blur-md border-b border-[#E8F5E9] px-6 py-4 flex justify-between items-center shrink-0 sticky top-0 z-30">
           <div>
-            <h2 className="text-base font-bold text-[#2E7D32]">Panel Siswa</h2>
-            <p className="text-xs text-[#2E7D32]/50 capitalize">{today}</p>
+            <h2 className="text-base font-black text-[#2E7D32]">Panel Siswa</h2>
+            <p className="text-xs text-[#2E7D32]/60 font-bold capitalize">{today}</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -180,7 +176,7 @@ export default async function SiswaLayout({
               <Bell size={18} />
             </Link>
             <div className="h-6 w-px bg-[#E8F5E9]" />
-            <span className="text-sm font-semibold text-[#2E7D32] hidden sm:block">
+            <span className="text-sm font-black text-[#2E7D32] hidden sm:block">
               {firstName}
             </span>
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4CAF50] to-[#2E7D32] flex items-center justify-center text-white text-xs font-black shadow-md shadow-[#4CAF50]/20">
@@ -198,24 +194,24 @@ export default async function SiswaLayout({
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E8F5E9] flex md:hidden justify-around items-center py-3 px-2 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <Link href="/dashboard/siswa" className="flex flex-col items-center gap-0.5 text-[#4CAF50]">
             <LayoutDashboard size={20} />
-            <span className="text-[9px] font-bold">Beranda</span>
+            <span className="text-[9px] font-black">Beranda</span>
           </Link>
           <Link href="/dashboard/siswa/mapel" className="flex flex-col items-center gap-0.5 text-[#2E7D32]/60 hover:text-[#2E7D32]">
             <BookOpen size={20} />
-            <span className="text-[9px] font-bold">Materi</span>
+            <span className="text-[9px] font-black">Materi</span>
           </Link>
           <Link href="/dashboard/siswa/quiz" className="flex flex-col items-center gap-0.5 text-[#2E7D32]/60 hover:text-[#2E7D32]">
             <History size={20} />
-            <span className="text-[9px] font-bold">Quiz</span>
+            <span className="text-[9px] font-black">Quiz</span>
           </Link>
           <Link href="/dashboard/siswa/pesan" className="flex flex-col items-center gap-0.5 text-[#2E7D32]/60 hover:text-[#2E7D32]">
             <MessageSquare size={20} />
-            <span className="text-[9px] font-bold">Pesan</span>
+            <span className="text-[9px] font-black">Pesan</span>
           </Link>
           <form action="/api/auth/logout" method="POST">
             <button type="submit" className="flex flex-col items-center gap-0.5 text-[#2E7D32]/60 hover:text-[#E53935]">
               <LogOut size={20} />
-              <span className="text-[9px] font-bold">Keluar</span>
+              <span className="text-[9px] font-black">Keluar</span>
             </button>
           </form>
         </nav>
