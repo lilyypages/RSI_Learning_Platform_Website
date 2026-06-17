@@ -64,12 +64,42 @@ export async function POST(req: NextRequest) {
 
     const newMessage = await db.message.create({
       data: {
-        senderId: session.userId,
+        senderId:   session.userId,
         receiverId: receiverId,
-        content: content.trim(),
-        isRead: false,
+        content:    content.trim(),
+        isRead:     false,
       },
     });
+
+    // 🔁 Sinkronisasi: jika TEACHER kirim ke STUDENT, forward notif & message ke parent(s)
+    if (session.role === "TEACHER") {
+      const targetStudent = await db.student.findUnique({
+        where: { userId: receiverId },
+        include: { user: { select: { id: true, name: true } }, parent: { include: { user: { select: { id: true } } } } },
+      });
+      if (targetStudent?.parent?.user.id) {
+        const parentUserId = targetStudent.parent.user.id;
+        // Buat message untuk parent
+        await db.message.create({
+          data: {
+            senderId:   session.userId,
+            receiverId: parentUserId,
+            content:    `💬 [Pesan untuk ${targetStudent.user?.name ?? "siswa"}]: ${content.trim()}`,
+            isRead:     false,
+          },
+        });
+        // Buat notifikasi untuk parent
+        await db.notification.create({
+          data: {
+            userId:    parentUserId,
+            title:     `Pesan dari Guru untuk ${targetStudent.user?.name ?? "Anak Anda"}`,
+            body:      content.trim().length > 100 ? content.trim().slice(0, 100) + "..." : content.trim(),
+            notifType: "MESSAGE",
+            isRead:    false,
+          },
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, message: newMessage }, { status: 201 });
   } catch (error) {
