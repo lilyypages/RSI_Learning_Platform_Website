@@ -110,8 +110,8 @@ export async function GET() {
         
         profile.classSubjects = teacher.classSubjects.map((cs) => ({
           id: cs.id,
-          subjectName: cs.subject.name,
-          className: cs.class.name,
+          subject: { name: cs.subject.name },
+          class: { name: cs.class.name },
           semester: cs.semester,
           academicYear: cs.academicYear,
         }));
