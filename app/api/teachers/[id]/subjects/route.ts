@@ -103,7 +103,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await req.json();
-    const { classSubjectIds, isHomeroom } = body;
+    const { classSubjectIds } = body;
 
     if (!Array.isArray(classSubjectIds)) {
       return NextResponse.json({ success: false, message: "Format data harus berbentuk array" }, { status: 400 });
@@ -152,13 +152,13 @@ export async function PUT(
     await db.$transaction(async (tx) => {
       await tx.classSubject.updateMany({
         where: { teacherId: id },
-        data: { isHomeroom: !!isHomeroom, teacherId: null }
+        data: { teacherId: null }
       });
 
       if (classSubjectIds.length > 0) {
         await tx.classSubject.updateMany({
           where: { id: { in: classSubjectIds } },
-          data: { isHomeroom: !!isHomeroom, teacherId: id }
+          data: { teacherId: id }
         });
       }
     });

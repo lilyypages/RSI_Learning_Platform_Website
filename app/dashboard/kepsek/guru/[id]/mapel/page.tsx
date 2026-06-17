@@ -57,7 +57,7 @@ export default function KelolaMapelGuruPage({ params }: { params: Promise<{ id: 
       const res = await fetch(`/api/teachers/${id}/subjects`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ classSubjectIds: selectedIds, isHomeroom: isHomeroom })
+        body: JSON.stringify({ classSubjectIds: selectedIds })
       });
 
       const json = await res.json();
