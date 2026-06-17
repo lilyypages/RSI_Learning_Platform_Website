@@ -392,6 +392,22 @@ export default async function SiswaDashboardPage() {
         </div>
 
         {/* Help banner */}
+        <div className="lg:col-span-2 bg-white border-2 border-dashed border-slate-200 rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <h4 className="text-base font-black text-slate-800 mb-1">
+              Tips Belajar 📚
+            </h4>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Jangan ragu tanya Guru di kelas kalau ada materi yang bingung ya,{" "}
+              {firstName}! Orang tua kamu juga bisa memantau perkembangan belajar lewat dashboard mereka.
+            </p>
+          </div>
+          <Link href="/dashboard/siswa/mapel" className="mt-4 block">
+            <button className="w-full bg-white border-2 border-slate-800 text-slate-800 py-2.5 rounded-xl font-black text-sm hover:bg-slate-800 hover:text-white transition-all">
+              Lanjut Belajar
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

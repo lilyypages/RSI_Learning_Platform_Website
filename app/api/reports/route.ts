@@ -104,44 +104,46 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // 🔁 Kirim pesan juga ke inbox masing-masing orang tua biar sinkron
+    // 🔁 3. Sinkronisasi: Kirim pesan laporan ke inbox masing-masing orang tua
     for (const item of laporanSiswa) {
       try {
         const student = await db.student.findUnique({
           where: { id: item.studentId },
           include: {
             user:   { select: { name: true } },
-            parent: { include: { user: { select: { id: true, name: true } } } },
+            parent: { include: { user: { select: { id: true } } } },
           },
         });
 
-        const parentUser = student?.parent?.user;
-        if (!parentUser?.id) continue;
+        if (!student?.parent?.user?.id) continue;
 
-        const combined = item.catatanIndividu
-          ? `📋 [Catatan Umum Kelas]: ${catatanKelas || "-"}\n📝 [Catatan Khusus ${student.user.name}]: ${item.catatanIndividu}`
-          : `📋 [Catatan Umum Kelas]: ${catatanKelas || "-"}`;
+        const parentUserId = student.parent.user.id;
+        const studentName = student.user?.name ?? "siswa";
+        const catatan = item.catatanIndividu
+          ? `📋 [Laporan Mingguan untuk ${studentName}]\n\n${catatanKelas || "-"}\n\n📝 Catatan Khusus: ${item.catatanIndividu}`
+          : `📋 [Laporan Mingguan untuk ${studentName}]\n\n${catatanKelas || "-"}`;
 
         await db.message.create({
           data: {
             senderId:   session.userId,
-            receiverId: parentUser.id,
-            content:    combined,
+            receiverId: parentUserId,
+            content:    catatan,
             isRead:     false,
           },
         });
 
         await db.notification.create({
           data: {
-            userId:    parentUser.id,
-            title:     `📋 Laporan Mingguan untuk ${student.user.name}`,
-            body:      combined.length > 120 ? combined.slice(0, 120) + "..." : combined,
+            userId:    parentUserId,
+            title:     `📋 Laporan Mingguan: ${studentName}`,
+            body:      (catatanKelas || "Laporan baru dari guru").slice(0, 100),
             notifType: "MESSAGE",
             isRead:    false,
           },
         });
       } catch (e) {
-        console.error(`[REPORTS_PARENT_NOTIF_ERROR] studentId=${item.studentId}`, e);
+        console.error(`[REPORTS_PARENT_SYNC_ERROR] studentId=${item.studentId}`, e);
+        // Tidak gagalkan response — laporan utama sudah tersimpan
       }
     }
 

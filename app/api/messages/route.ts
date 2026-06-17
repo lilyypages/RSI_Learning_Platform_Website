@@ -83,13 +83,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 🔁 Auto-forward ke parent kalo TEACHER ngirim ke STUDENT
+    // 🔁 Sinkronisasi: jika TEACHER kirim ke STUDENT, forward salinan ke parent
     if (session.role === "TEACHER" && receiver.role === "STUDENT") {
       try {
         const targetStudent = await db.student.findUnique({
           where: { userId: receiverId },
           include: {
-            user:   { select: { id: true, name: true } },
+            user: { select: { id: true, name: true } },
             parent: { include: { user: { select: { id: true } } } },
           },
         });
@@ -99,22 +99,22 @@ export async function POST(req: NextRequest) {
             data: {
               senderId:   session.userId,
               receiverId: parentUserId,
-              content:    `💬 [Pesan untuk ${targetStudent.user.name}]: ${content}`,
+              content:    `💬 [Pesan untuk ${targetStudent.user?.name ?? "siswa"}]: ${content}`,
               isRead:     false,
             },
           });
           await db.notification.create({
             data: {
               userId:    parentUserId,
-              title:     `Pesan dari Guru untuk ${targetStudent.user.name}`,
+              title:     `Pesan Guru untuk ${targetStudent.user?.name ?? "Anak Anda"}`,
               body:      content.length > 100 ? content.slice(0, 100) + "..." : content,
               notifType: "MESSAGE",
               isRead:    false,
             },
           });
         }
-      } catch (e) {
-        console.error("[MESSAGES_PARENT_FORWARD_ERROR]", e);
+      } catch (syncErr) {
+        console.error("[MESSAGES_PARENT_SYNC_ERROR]", syncErr);
       }
     }
 

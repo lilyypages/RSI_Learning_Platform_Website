@@ -125,6 +125,7 @@ export default async function SiswaLayout({
             <History size={18} />
             Riwayat Quiz
           </Link>
+
         </nav>
 
         {/* Footer sidebar: poin + logout */}
@@ -197,6 +198,7 @@ export default async function SiswaLayout({
             <History size={20} />
             <span className="text-[9px] font-black">Quiz</span>
           </Link>
+
           <form action="/api/auth/logout" method="POST">
             <button type="submit" className="flex flex-col items-center gap-0.5 text-[#2E7D32]/60 hover:text-[#E53935]">
               <LogOut size={20} />
